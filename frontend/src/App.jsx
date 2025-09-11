@@ -54,7 +54,7 @@ export default function App() {
   const saveEdit = async () => {
     try {
       const updated = { amount: Number(editAmount) || 0, category: editCategory, note: editNote, date: editDate };
-      const res = await api.put(`/expense/${editingIndex}`, updated);
+      const res = await api.put(`/expenses/${editingIndex}`, updated);
       setExpenses((prev) => prev.map((e, i) => (i === editingIndex ? res.data : e)));
       setEditingIndex(null);
       setEditAmount("");
@@ -120,6 +120,10 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
 
 
 
