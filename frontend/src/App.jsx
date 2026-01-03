@@ -3,6 +3,10 @@ import api from "./api";
 import ExpenseForm from "./ExpenseForm";
 import MonthlyTrend from "./MonthlyTrend";
 import CategoryDonut from "./CategoryDonut";
+import WeeklyBar from "./WeeklyBar";
+import { filterExpensesByCurrentMonth } from "./utils";
+import { filterExpensesByCurrentWeek } from "./utils";
+
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
@@ -13,6 +17,9 @@ export default function App() {
   const [editCategory, setEditCategory] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editDate, setEditDate] = useState("");
+  const currentMonthExpenses = filterExpensesByCurrentMonth(expenses);
+  const weeklyExpenses = filterExpensesByCurrentWeek(expenses);
+
 
   useEffect(() => {
     async function load() {
@@ -33,15 +40,15 @@ export default function App() {
     setExpenses((prev) => [...prev, newExpense]);
   };
 
-  const handleDelete = async (index) => {
+  const handleDelete = async (id) => {
     try {
-      await api.delete(`/expense/${index}`);
-      setExpenses((prev) => prev.filter((_, i) => i !== index));
+      await api.delete(`/expenses/${id}`);
+      setExpenses((prev) => prev.filter((e) => e.id !== id));
     } catch (err) {
-      console.error("Failed to delete expense:", err);
-      alert("Delete failed. See console.");
+      console.error("Failed to delete:", err);
     }
   };
+
 
   const startEditing = (index) => {
     setEditingIndex(index);
@@ -54,8 +61,11 @@ export default function App() {
   const saveEdit = async () => {
     try {
       const updated = { amount: Number(editAmount) || 0, category: editCategory, note: editNote, date: editDate };
-      const res = await api.put(`/expenses/${editingIndex}`, updated);
-      setExpenses((prev) => prev.map((e, i) => (i === editingIndex ? res.data : e)));
+      const id = expenses[editingIndex].id; 
+      const res = await api.put(`/expenses/${id}`, updated);
+      setExpenses((prev) =>
+        prev.map((e, i) => (i === editingIndex ? res.data : e))
+      );
       setEditingIndex(null);
       setEditAmount("");
       setEditCategory("");
@@ -80,50 +90,112 @@ export default function App() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">Trackwise</h1>
+      <h1 className="text-5xl font-bold mb-6 text-center text-red-600 bg-yellow-200">Trackwise</h1>
 
-      <ExpenseForm onAdd={handleAdd} />
 
-      {/* Charts area */}
-      <div className="flex flex-wrap gap-6 justify-center mb-6">
-        <MonthlyTrend expenses={expenses} />
-        <CategoryDonut expenses={expenses} />
+      <div className="expenseSection mb-6">
+        <ExpenseForm onAdd={handleAdd} />
       </div>
 
-      <p className="mb-4 text-gray-700">Fetched {expenses.length} expenses from API.</p>
-      {expenses.length === 0 ? (
-        <p className="text-gray-500">No expenses yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {expenses.map((e, i) => (
-            <li key={i}>
-              {editingIndex === i ? (
-                <>
-                  <input type="number" value={editAmount} onChange={(ev) => setEditAmount(ev.target.value)} />
-                  <input type="text" value={editCategory} onChange={(ev) => setEditCategory(ev.target.value)} />
-                  <input type="text" value={editNote} onChange={(ev) => setEditNote(ev.target.value)} />
-                  <input type="date" value={editDate} onChange={(ev) => setEditDate(ev.target.value)} />
-                  <button onClick={saveEdit} style={{ marginLeft: 8 }}>💾 Save</button>
-                  <button onClick={cancelEdit} style={{ marginLeft: 8, color: "red" }}>❌ Cancel</button>
-                </>
-              ) : (
-                <>
-                  {e.amount} • {e.category} • {e.note} • {e.date}
-                  <button onClick={() => startEditing(i)} style={{ marginLeft: 8 }}>✏️</button>
-                  <button onClick={() => handleDelete(i)} style={{ marginLeft: 8, color: "red" }}>❌</button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="chartsSection mb-6">
+        <div className="flex flex-wrap gap-6 justify-center">
+          <MonthlyTrend expenses={expenses} />
+          <CategoryDonut expenses={currentMonthExpenses} />
+          <WeeklyBar expenses={weeklyExpenses} />
+        </div>
+      </div>
+
+      <div className="listSection mt-6">
+        <p className="mb-4 text-gray-700 text-sm">
+          Fetched {expenses.length} expenses from API.
+        </p>
+
+        {expenses.length === 0 ? (
+          <p className="text-gray-500 text-sm">No expenses yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {expenses.map((e, i) => (
+              <li
+                key={i}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg"
+              >
+                {editingIndex === i ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="number"
+                        value={editAmount}
+                        onChange={(ev) => setEditAmount(ev.target.value)}
+                        className="border px-2 py-1 rounded w-24"
+                      />
+                      <input
+                        type="text"
+                        value={editCategory}
+                        onChange={(ev) => setEditCategory(ev.target.value)}
+                        className="border px-2 py-1 rounded w-32"
+                      />
+                      <input
+                        type="text"
+                        value={editNote}
+                        onChange={(ev) => setEditNote(ev.target.value)}
+                        className="border px-2 py-1 rounded w-40"
+                      />
+                      <input
+                        type="date"
+                        value={editDate}
+                        onChange={(ev) => setEditDate(ev.target.value)}
+                        className="border px-2 py-1 rounded"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={saveEdit}
+                        className="px-3 py-1 bg-green-500 text-white rounded"
+                      >
+                        💾 Save
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-3 py-1 bg-red-500 text-white rounded"
+                      >
+                        ❌ Cancel
+                      </button>
+                    </div>
+                 </>
+                ) : (
+                  <>
+                    <div className="text-sm">
+                      <span className="font-semibold">₹{e.amount}</span> •{" "}
+                      <span>{e.category}</span> •{" "}
+                      <span className="text-gray-600">{e.note || "—"}</span> •{" "}
+                      <span className="text-gray-500">{e.date}</span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => startEditing(i)}
+                        className="px-2 py-1 text-sm border rounded"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        className="px-2 py-1 text-sm border rounded text-red-500"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  </>
+                )}
+             </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      
     </div>
   );
+
 }
-
-
-
-
-
-
-
