@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,9 +10,8 @@ import {
   Legend,
 } from "chart.js";
 import {
-  filterExpensesByCurrentWeek,
   groupExpensesByWeekday,
-  getCurrentWeekRangeLabel,
+  getWeekRangeFromDate,
 } from "./utils";
 
 ChartJS.register(
@@ -25,9 +24,19 @@ ChartJS.register(
 );
 
 export default function WeeklyBar({ expenses }) {
-  const { labels, totals } = groupExpensesByWeekday(expenses);
-  const weeklyExpenses = filterExpensesByCurrentWeek(expenses);
-  const weekLabel = getCurrentWeekRangeLabel();
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+
+  const { startOfWeek, endOfWeek, label } =
+    getWeekRangeFromDate(selectedDate);
+
+  const weeklyExpenses = expenses.filter((expense) => {
+    const d = new Date(expense.date);
+    return d >= startOfWeek && d <= endOfWeek;
+  });
+
+  const { labels, totals } = groupExpensesByWeekday(weeklyExpenses);
 
   const data = {
     labels,
@@ -55,7 +64,17 @@ export default function WeeklyBar({ expenses }) {
 
   return (
     <div style={{ width: "100%", maxWidth: 700 }}>
-      <h3 className="text-sm text-gray-500 mb-2">{weekLabel}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm text-gray-500">{label}</h3>
+
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border px-2 py-1 rounded text-sm"
+        />
+      </div>
+
       <Bar data={data} options={options} />
     </div>
   );

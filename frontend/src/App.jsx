@@ -17,9 +17,6 @@ export default function App() {
   const [editCategory, setEditCategory] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editDate, setEditDate] = useState("");
-  const currentMonthExpenses = filterExpensesByCurrentMonth(expenses);
-  const weeklyExpenses = filterExpensesByCurrentWeek(expenses);
-
 
   useEffect(() => {
     async function load() {
@@ -100,8 +97,8 @@ export default function App() {
       <div className="chartsSection mb-6">
         <div className="flex flex-wrap gap-6 justify-center">
           <MonthlyTrend expenses={expenses} />
-          <CategoryDonut expenses={currentMonthExpenses} />
-          <WeeklyBar expenses={weeklyExpenses} />
+          <CategoryDonut expenses={expenses} />
+          <WeeklyBar expenses={expenses} />
         </div>
       </div>
 

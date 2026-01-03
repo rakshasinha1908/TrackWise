@@ -109,4 +109,33 @@ export function getCurrentWeekRangeLabel() {
   return `This week: ${format(startOfWeek)} – ${format(endOfWeek)}`;
 }
 
+export function filterExpensesByYear(expenses, year) {
+  return expenses.filter((expense) => {
+    const expenseYear = new Date(expense.date).getFullYear();
+    return expenseYear === year;
+  });
+}
 
+export function getWeekRangeFromDate(dateInput) {
+  const date = new Date(dateInput);
+
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() - date.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const format = (d) =>
+    d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    });
+
+  return {
+    startOfWeek,
+    endOfWeek,
+    label: `This week: ${format(startOfWeek)} – ${format(endOfWeek)}`,
+  };
+}
