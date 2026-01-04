@@ -4,8 +4,10 @@ import ExpenseForm from "./ExpenseForm";
 import MonthlyTrend from "./MonthlyTrend";
 import CategoryDonut from "./CategoryDonut";
 import WeeklyBar from "./WeeklyBar";
-import { filterExpensesByCurrentMonth } from "./utils";
-import { filterExpensesByCurrentWeek } from "./utils";
+import KPICard from "./components/KPICard";
+import SmartTips from "./components/SmartTips";
+import DashboardLayout from "./components/DashboardLayout";
+
 
 
 export default function App() {
@@ -86,21 +88,17 @@ export default function App() {
   if (error) return <p className="text-red-600">API error: {error}</p>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-5xl font-bold mb-6 text-center text-red-600 bg-yellow-200">Trackwise</h1>
+    <div className="min-h-screen w-full px-4 md:px-6 lg:px-12">
+      {/* <h1 className="text-2xl font-bold mb-6 text-center text-red-600 bg-yellow-200">Trackwise</h1> */}
 
 
       <div className="expenseSection mb-6">
         <ExpenseForm onAdd={handleAdd} />
       </div>
 
-      <div className="chartsSection mb-6">
-        <div className="flex flex-wrap gap-6 justify-center">
-          <MonthlyTrend expenses={expenses} />
-          <CategoryDonut expenses={expenses} />
-          <WeeklyBar expenses={expenses} />
-        </div>
-      </div>
+      <main className="w-full max-w-screen-2xl mx-auto px-4 md:px-6">
+        <DashboardLayout expenses={expenses} />
+      </main>
 
       <div className="listSection mt-6">
         <p className="mb-4 text-gray-700 text-sm">
@@ -194,5 +192,7 @@ export default function App() {
       
     </div>
   );
+ 
+
 
 }

@@ -13,6 +13,7 @@ import {
   groupExpensesByWeekday,
   getWeekRangeFromDate,
 } from "./utils";
+import DashboardCard from "./components/DashboardCard";
 
 ChartJS.register(
   CategoryScale,
@@ -52,10 +53,6 @@ export default function WeeklyBar({ expenses }) {
     responsive: true,
     plugins: {
       legend: { display: false },
-      title: {
-        display: true,
-        text: "Weekly Spending Pattern",
-      },
     },
     scales: {
       y: { beginAtZero: true },
@@ -63,19 +60,19 @@ export default function WeeklyBar({ expenses }) {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: 700 }}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm text-gray-500">{label}</h3>
-
+    <DashboardCard
+      title="Weekly Spending"
+      actions={
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
           className="border px-2 py-1 rounded text-sm"
         />
-      </div>
-
+      }
+    >
+      <p className="text-xs text-gray-500 mb-2">{label}</p>
       <Bar data={data} options={options} />
-    </div>
+    </DashboardCard>
   );
 }
