@@ -51,6 +51,7 @@ export default function WeeklyBar({ expenses }) {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
     },
@@ -62,6 +63,7 @@ export default function WeeklyBar({ expenses }) {
   return (
     <DashboardCard
       title="Weekly Spending"
+      padding="p-2"
       actions={
         <input
           type="date"

@@ -6,7 +6,7 @@ export default function RecentExpensesCard({ expenses }) {
     .slice(0, 5); // last 5 expenses
 
   return (
-    <DashboardCard title="Recent Expenses">
+    <DashboardCard title="Recent Expenses" bordered shadow>
       {recent.length === 0 ? (
         <p className="text-sm text-gray-500">No expenses yet.</p>
       ) : (

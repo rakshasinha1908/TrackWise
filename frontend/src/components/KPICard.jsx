@@ -8,19 +8,12 @@ export default function KPICard({ expenses = [] }) {
   );
 
   return (
-    <DashboardCard title="Overview">
+    <DashboardCard title="Overview" padding="p-2" bordered>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-500">Total Spend</p>
-          <p className="text-xl font-semibold">
+          <p className="text-[11px] text-gray-500">Total Spend</p>
+          <p className="text-xs font-semibold leading-tight">
             ₹{totalSpend.toFixed(0)}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">Expenses Logged</p>
-          <p className="text-xl font-semibold">
-            {expenses.length}
           </p>
         </div>
       </div>

@@ -7,61 +7,61 @@ import RecentExpensesCard from "./RecentExpensesCard";
 
 export default function DashboardLayout({ expenses }) {
   return (
-    <div
-      className="
-        w-full
-        grid
-        gap-6
-        grid-cols-1
-        lg:grid-cols-12
-      "
-    >
-      {/* LEFT SECTION */}
-      <div
-        className="
-          col-span-1
-          lg:col-span-8
-          flex
-          flex-col
-          gap-6
-        "
-      >
-        <MonthlyTrend expenses={expenses} />
-        <WeeklyBar expenses={expenses} />
-      </div>
+    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      {/* RIGHT SECTION */}
-      <div
-        className="
-          col-span-1
-          lg:col-span-4
-          flex
-          flex-col
-          gap-6
-        "
-      >
-        {/* KPI CARDS */}
-        <div
-          className="
-            grid
-            grid-cols-2
-            sm:grid-cols-2
-            gap-4
-          "
-        >
-          <KPICard />
-          <KPICard />
-          <KPICard />
-          <KPICard />
+      {/* ================= LEFT SECTION ================= */}
+      <div className="col-span-1 lg:col-span-7 flex flex-col gap-6">
+
+        {/* Monthly Trend (hero chart) */}
+        <div className="h-[260px]">
+          <MonthlyTrend expenses={expenses} />
         </div>
 
-        <SmartTips />
+        {/* Weekly Bar */}
+        <div className="h-[200px]">
+          <WeeklyBar expenses={expenses} />
+        </div>
 
-        <CategoryDonut expenses={expenses} />
+      </div>
 
-        <RecentExpensesCard expenses={expenses} />
+      {/* ================= RIGHT SECTION ================= */}
+      <div className="grid grid-cols-[2.4fr_1fr] gap-6">
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="h-[105px] min-w-[90px]">
+            <KPICard />
+          </div> 
+          <div className="h-[105px] min-w-[90px]">
+            <KPICard />
+          </div>
+          <div className="h-[105px] min-w-[90px]">
+            <KPICard />
+          </div>
+          <div className="h-[105px] min-w-[90px]">
+            <KPICard />
+          </div>
+        </div>
+
+
+        {/* Smart Tips */}
+        <div className="h-[220px] min-w-[200px]">
+          <SmartTips />
+        </div>
+
+        {/* Category Donut */}
+        <div className="h-[260px]">
+          <CategoryDonut expenses={expenses} />
+        </div> 
+
+        {/* Recent Expenses */}
+        <div className="h-[260px]">
+          <RecentExpensesCard expenses={expenses} />
+        </div>
+
       </div>
     </div>
   );
 }
+
 
