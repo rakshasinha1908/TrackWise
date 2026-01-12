@@ -12,7 +12,7 @@ export default function DashboardCard({
   return (
     <div
       className={`
-        w-full h-full bg-white rounded-xl flex flex-col
+        w-full h-full rounded-xl flex flex-col
         ${bordered ? "border" : ""}
         ${shadow ? "shadow-sm" : ""}
         ${padding}

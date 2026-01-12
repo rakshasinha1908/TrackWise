@@ -122,3 +122,52 @@ export function getWeekRangeFromDate(dateInput) {
     label: `This week: ${format(startOfWeek)} – ${format(endOfWeek)}`,
   };
 }
+
+
+// ===== Monthly Trend (Bi-Yearly Comparison) =====
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const HALF_MONTHS = {
+  H1: [0, 1, 2, 3, 4, 5],   // Jan–Jun
+  H2: [6, 7, 8, 9, 10, 11] // Jul–Dec
+};
+
+export function buildBiYearlyMonthlyTrend(expenses, year, half) {
+  const months = HALF_MONTHS[half];
+
+  const labels = months.map((m) => MONTHS[m]);
+
+  const primaryTotals = months.map((month) => {
+    return expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return (
+          d.getFullYear() === year &&
+          d.getMonth() === month
+        );
+      })
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  });
+
+  const secondaryTotals = months.map((month) => {
+    return expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return (
+          d.getFullYear() === year - 1 &&
+          d.getMonth() === month
+        );
+      })
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  });
+
+  return {
+    labels,
+    primaryTotals,
+    secondaryTotals,
+  };
+}
+
+

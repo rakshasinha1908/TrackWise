@@ -63,7 +63,7 @@ export default function WeeklyBar({ expenses }) {
   return (
     <DashboardCard
       title="Weekly Spending"
-      padding="p-2"
+      padding="p-4"
       actions={
         <input
           type="date"

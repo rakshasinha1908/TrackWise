@@ -30,16 +30,16 @@ export default function DashboardLayout({ expenses }) {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 gap-2">
           <div className="h-[105px] min-w-[90px]">
-            <KPICard />
+            <KPICard label="Total Spend" value="₹25,100" />
           </div> 
           <div className="h-[105px] min-w-[90px]">
-            <KPICard />
+            <KPICard label="Avg / Day" value="₹840" />
           </div>
           <div className="h-[105px] min-w-[90px]">
-            <KPICard />
+            <KPICard label="Vs Budget" value="87%" />
           </div>
           <div className="h-[105px] min-w-[90px]">
-            <KPICard />
+            <KPICard label="Txns" value="32" />
           </div>
         </div>
 
