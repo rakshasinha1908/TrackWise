@@ -169,5 +169,3 @@ export function buildBiYearlyMonthlyTrend(expenses, year, half) {
     secondaryTotals,
   };
 }
-
-

@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { aggregateByCategory } from "./utils";
@@ -6,21 +5,11 @@ import DashboardCard from "./components/DashboardCard";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export default function CategoryDonut({ expenses }) {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-
-  // available years from data
-  const years = Array.from(
-    new Set(expenses.map((e) => new Date(e.date).getFullYear()))
-  ).sort((a, b) => b - a);
-
-  const [selectedYear, setSelectedYear] = useState(
-    years[0] || currentYear
-  );
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-
+export default function CategoryDonut({
+  expenses,
+  selectedYear,
+  selectedMonth,
+}) {
   const filteredExpenses = expenses.filter((expense) => {
     const d = new Date(expense.date);
     return (
@@ -31,65 +20,50 @@ export default function CategoryDonut({ expenses }) {
 
   const { labels, totals } = aggregateByCategory(filteredExpenses);
 
+  const hasData = labels.length > 0;
+
   const data = {
-    labels,
+    labels: hasData ? labels : ["No data"],
     datasets: [
       {
-        data: totals,
+        data: hasData ? totals : [1],
+        backgroundColor: hasData
+          ? [
+              "#6170f3",
+              "#7984f5",
+              "#9aa3f7",
+              "#bcc2fb",
+              "#dee1fe",
+            ]
+          : ["#E5E7EB"], // gray-200
+        borderWidth: 0,
       },
     ],
   };
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: { position: "bottom" },
+      legend: {
+        display: hasData,
+        position: "bottom",
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: () => (hasData ? undefined : "No data for selected month"),
+        },
+      },
     },
+    cutout: "70%",
   };
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
   return (
-    <DashboardCard
-      title="Category Breakdown"
-      actions={
-        <div className="flex gap-2">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="border px-2 py-1 text-sm rounded"
-          >
-            {months.map((m, idx) => (
-              <option key={idx} value={idx}>
-                {m}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border px-2 py-1 text-sm rounded"
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      }
-    >
-      {labels.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center">
-          No data for selected period
-        </p>
-      ) : (
+    <DashboardCard title="Category Breakdown">
+      <div className="h-[180px] flex items-center justify-center">
         <Doughnut data={data} options={options} />
-      )}
+      </div>
     </DashboardCard>
   );
 }

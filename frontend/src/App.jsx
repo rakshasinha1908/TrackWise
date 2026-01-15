@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "./api";
 import ExpenseForm from "./ExpenseForm";
-import MonthlyTrend from "./MonthlyTrend";
-import CategoryDonut from "./CategoryDonut";
-import WeeklyBar from "./WeeklyBar";
-import KPICard from "./components/KPICard";
-import SmartTips from "./components/SmartTips";
 import DashboardLayout from "./components/DashboardLayout";
 
 

@@ -14,6 +14,8 @@ import {
 import DashboardCard from "./components/DashboardCard";
 import { buildBiYearlyMonthlyTrend } from "./utils";
 
+
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -25,24 +27,20 @@ ChartJS.register(
   Filler
 );
 
-export default function MonthlyTrend({ expenses }) {
-  const years = Array.from(
-    new Set(expenses.map((e) => new Date(e.date).getFullYear()))
-  ).sort((a, b) => b - a);
+export default function MonthlyTrend({
+  expenses,
+  selectedYear,
+  selectedMonth,
+}) {
 
-  const [selectedYear, setSelectedYear] = useState(
-    years[0] || new Date().getFullYear()
-  );
   const [half, setHalf] = useState("H1");
+  useEffect(() => {
+  setHalf(selectedMonth <= 5 ? "H1" : "H2");
+}, [selectedMonth]);
+
 
   const primaryYear = selectedYear;
   const secondaryYear = selectedYear - 1;
-
-  useEffect(() => {
-    if (years.length && !years.includes(selectedYear)) {
-      setSelectedYear(years[0]);
-    }
-  }, [years, selectedYear]);
 
   const createGradient = (chart) => {
     const { ctx, chartArea } = chart;
@@ -108,15 +106,15 @@ export default function MonthlyTrend({ expenses }) {
     };
   }, [expenses, primaryYear, secondaryYear, half]);
 
+  
+
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: {
-          usePointStyle: true,
-          pointStyle: "line",
-        },
+        display: false,
       },
       tooltip: {
         backgroundColor: "rgba(17, 24, 39, 0.95)",
@@ -183,43 +181,8 @@ export default function MonthlyTrend({ expenses }) {
   <Line data={chartData} options={options} />
 </div>
 
-<div className="mt-4 flex items-center justify-end gap-2 bg-gray-50 px-2 py-1 rounded-md">
-  <button
-    onClick={() => setHalf("H1")}
-    className={`px-3 py-1 text-sm rounded border ${
-      half === "H1"
-        ? "bg-gray-900 text-white"
-        : "bg-gray-50 text-gray-500 border-gray-300"
-    }`}
-  >
-    H1
-  </button>
-
-  <button
-    onClick={() => setHalf("H2")}
-    className={`px-3 py-1 text-sm rounded border ${
-      half === "H2"
-        ? "bg-gray-900 text-white"
-        : "bg-gray-50 text-gray-500 border-gray-300"
-    }`}
-  >
-    H2
-  </button>
-
-  <select
-    value={selectedYear}
-    onChange={(e) => setSelectedYear(Number(e.target.value))}
-    className="px-3 py-1 text-sm border rounded"
-  >
-    {years.map((year) => (
-      <option key={year} value={year}>
-        {year}
-      </option>
-    ))}
-  </select>
-</div>
-
-
     </DashboardCard>
   );
 }
+
+

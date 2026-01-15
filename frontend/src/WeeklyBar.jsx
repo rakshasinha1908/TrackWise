@@ -11,8 +11,9 @@ import {
 } from "chart.js";
 import {
   groupExpensesByWeekday,
-  getWeekRangeFromDate,
+  getCurrentWeekRangeLabel,
 } from "./utils";
+
 import DashboardCard from "./components/DashboardCard";
 
 ChartJS.register(
@@ -25,12 +26,24 @@ ChartJS.register(
 );
 
 export default function WeeklyBar({ expenses }) {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  // const [selectedDate, setSelectedDate] = useState(
+  //   new Date().toISOString().slice(0, 10)
+  // );
 
-  const { startOfWeek, endOfWeek, label } =
-    getWeekRangeFromDate(selectedDate);
+  // const { startOfWeek, endOfWeek, label } =
+  //   getWeekRangeFromDate(selectedDate);
+
+  const label = getCurrentWeekRangeLabel();
+
+const now = new Date();
+const startOfWeek = new Date(now);
+startOfWeek.setDate(now.getDate() - now.getDay());
+startOfWeek.setHours(0, 0, 0, 0);
+
+const endOfWeek = new Date(startOfWeek);
+endOfWeek.setDate(startOfWeek.getDate() + 6);
+endOfWeek.setHours(23, 59, 59, 999);
+
 
   const weeklyExpenses = expenses.filter((expense) => {
     const d = new Date(expense.date);
@@ -64,14 +77,14 @@ export default function WeeklyBar({ expenses }) {
     <DashboardCard
       title="Weekly Spending"
       padding="p-4"
-      actions={
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border px-2 py-1 rounded text-sm"
-        />
-      }
+      // actions={
+      //   <input
+      //     type="date"
+      //     value={selectedDate}
+      //     onChange={(e) => setSelectedDate(e.target.value)}
+      //     className="border px-2 py-1 rounded text-sm"
+      //   />
+      // }
     >
       <p className="text-xs text-gray-500 mb-2">{label}</p>
       <Bar data={data} options={options} />
