@@ -5,21 +5,22 @@ import DashboardCard from "./components/DashboardCard";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export default function CategoryDonut({
-  expenses,
-  selectedYear,
-  selectedMonth,
-}) {
+const CATEGORY_COLORS = [
+  "#4f74f6", // blue
+  "#f7b441", // yellow
+  "#22a378", // green
+  "#fd615a", // red
+  "#7c8cff", // extended shades (fallback)
+  "#4fd1c5",
+];
+
+export default function CategoryDonut({ expenses, selectedYear, selectedMonth }) {
   const filteredExpenses = expenses.filter((expense) => {
     const d = new Date(expense.date);
-    return (
-      d.getFullYear() === selectedYear &&
-      d.getMonth() === selectedMonth
-    );
+    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
   });
 
   const { labels, totals } = aggregateByCategory(filteredExpenses);
-
   const hasData = labels.length > 0;
 
   const data = {
@@ -28,14 +29,8 @@ export default function CategoryDonut({
       {
         data: hasData ? totals : [1],
         backgroundColor: hasData
-          ? [
-              "#6170f3",
-              "#7984f5",
-              "#9aa3f7",
-              "#bcc2fb",
-              "#dee1fe",
-            ]
-          : ["#E5E7EB"], // gray-200
+          ? labels.map((_, i) => CATEGORY_COLORS[i % CATEGORY_COLORS.length])
+          : ["#E5E7EB"],
         borderWidth: 0,
       },
     ],
@@ -48,11 +43,17 @@ export default function CategoryDonut({
       legend: {
         display: hasData,
         position: "bottom",
+        labels: {
+          boxWidth: 14,
+          boxHeight: 14,
+          color: "#374151",
+          font: { size: 12 },
+        },
       },
       tooltip: {
-        enabled: true,
         callbacks: {
-          label: () => (hasData ? undefined : "No data for selected month"),
+          label: (ctx) =>
+            hasData ? `₹${ctx.formattedValue}` : "No data for selected month",
         },
       },
     },

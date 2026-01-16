@@ -29,6 +29,19 @@ function ExpenseForm({ onAdd }) {
     }
   };
 
+  const CATEGORY_OPTIONS = [
+    "Food",
+    "Groceries",
+    "Transport",
+    "Rent",
+    "Shopping",
+    "Entertainment",
+    "Bills",
+    "Health",
+    "Travel",
+    "Other",
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2 mb-6">
       <input
@@ -37,33 +50,39 @@ function ExpenseForm({ onAdd }) {
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
-        
       />
-      <input
-        type="text"
-        placeholder="Category"
+
+      <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
         required
-        
-      />
+        className="border px-2 py-1 rounded"
+      >
+        <option value="" disabled>
+          Select category
+        </option>
+        {CATEGORY_OPTIONS.map((cat) => (
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+
       <input
         type="text"
         placeholder="Note"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        
       />
+
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
         required
-        
       />
-      <button type="submit">
-        Add Expense
-      </button>
+
+      <button type="submit">Add Expense</button>
     </form>
   );
 }

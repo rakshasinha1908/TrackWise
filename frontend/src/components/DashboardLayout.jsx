@@ -5,113 +5,117 @@ import KPICard from "./KPICard";
 import SmartTips from "./SmartTips";
 import RecentExpensesCard from "./RecentExpensesCard";
 import { useState } from "react";
- 
-
-
 
 export default function DashboardLayout({ expenses }) {
-
   const now = new Date();
 
-  const [selectedYear, setSelectedYear] = useState(
-    now.getFullYear()
-  );
-  const [selectedMonth, setSelectedMonth] = useState(
-    now.getMonth()
-  );
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
 
   return (
-    
     <>
-    {/* ===== Global Month / Year Selector (non-intrusive) ===== */}
-    <div className="w-full flex justify-end mb-4">
-      <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-md border">
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="px-2 py-1 text-sm bg-transparent outline-none"
-        >
-          {[
-            "Jan","Feb","Mar","Apr","May","Jun",
-            "Jul","Aug","Sep","Oct","Nov","Dec",
-          ].map((m, i) => (
-            <option key={i} value={i}>{m}</option>
-          ))}
-        </select>
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="flex-1 px-6">
+        {/* ===== Global Month / Year Selector ===== */}
+        <div className="w-full flex justify-end mb-4 ">
+          <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-md border">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="px-2 py-1 text-sm bg-transparent outline-none"
+            >
+              {[
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ].map((m, i) => (
+                <option key={i} value={i}>
+                  {m}
+                </option>
+              ))}
+            </select>
 
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="px-2 py-1 text-sm bg-transparent outline-none"
-        >
-          {Array.from(
-            new Set(expenses.map(e => new Date(e.date).getFullYear()))
-          )
-            .sort((a, b) => b - a)
-            .map((year) => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-        </select>
-      </div>
-    </div>
-    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
-     
-
-      {/* ================= LEFT SECTION ================= */}
-      <div className="col-span-1 lg:col-span-7 flex flex-col gap-6">
-
-        {/* Monthly Trend (hero chart) */}
-        <div className="h-[260px]">
-          <MonthlyTrend expenses={expenses} selectedYear={selectedYear} selectedMonth={selectedMonth}
-/>
-
-        </div>
-
-        {/* Weekly Bar */}
-        <div className="h-[200px]">
-          <WeeklyBar expenses={expenses} />
-        </div>
-
-      </div>
-
-      {/* ================= RIGHT SECTION ================= */}
-      <div className="grid grid-cols-[minmax(260px,360px)_1fr] gap-6">
-
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="h-[105px] min-w-[70px]">
-            <KPICard label="Total Spend" value="₹25,100" />
-          </div> 
-          <div className="h-[105px] min-w-[90px]">
-            <KPICard label="Avg / Day" value="₹840" />
-          </div>
-          <div className="h-[105px] min-w-[90px]">
-            <KPICard label="Vs Budget" value="87%" />
-          </div>
-          <div className="h-[105px] min-w-[90px]">
-            <KPICard label="Txns" value="32" />
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-2 py-1 text-sm bg-transparent outline-none"
+            >
+              {Array.from(
+                new Set(expenses.map((e) => new Date(e.date).getFullYear()))
+              )
+                .sort((a, b) => b - a)
+                .map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+            </select>
           </div>
         </div>
 
+        {/* ===== DASHBOARD GRID ===== */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT SECTION */}
+          <div className="col-span-1 lg:col-span-7 flex flex-col gap-6">
+            <div className="h-[260px]">
+              <MonthlyTrend
+                expenses={expenses}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+              />
+            </div>
 
-        {/* Smart Tips */}
-        <div className="h-[220px] min-w-[200px]">
-          <SmartTips />
+            <div className="h-[200px]">
+              <WeeklyBar expenses={expenses} />
+            </div>
+          </div>
+
+          {/* RIGHT SECTION */}
+          <div className="col-span-1 lg:col-span-5 grid grid-cols-[minmax(230px,300px)_minmax(360px,1fr)] gap-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 gap-2 max-w-[235px]">
+              <div className="h-[105px] max-w-[110px]">
+                <KPICard label="Total Spend" value="₹25,100" />
+              </div>
+              <div className="h-[105px] max-w-[110px]">
+                <KPICard label="Avg / Day" value="₹840" />
+              </div>
+              <div className="h-[105px] max-w-[110px]">
+                <KPICard label="Vs Budget" value="87%" />
+              </div>
+              <div className="h-[105px] max-w-[110px]">
+                <KPICard label="Txns" value="32" />
+              </div>
+            </div>
+
+            <div className="h-[220px] max-w-[220px]">
+              <SmartTips />
+            </div>
+
+            <div className="h-[260px] max-w-[250px]">
+              <CategoryDonut
+                expenses={expenses}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+              />
+            </div>
+
+            <div className="h-[260px] max-w-[220px]">
+              <RecentExpensesCard expenses={expenses} />
+            </div>
+          </div>
         </div>
-
-        {/* Category Donut */}
-        <div className="h-[260px]">
-          <CategoryDonut expenses={expenses} selectedYear={selectedYear} selectedMonth={selectedMonth} />
-        </div> 
-
-        {/* Recent Expenses */}
-        <div className="h-[260px]">
-          <RecentExpensesCard expenses={expenses} />
-        </div>
-
       </div>
-    </div>
-  </>
+    </>
   );
 }
 
