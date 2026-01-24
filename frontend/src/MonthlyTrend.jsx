@@ -177,7 +177,7 @@ export default function MonthlyTrend({
       padding="p-4"
       className="bg-white"
     >
-      <div className="relative">
+      <div className="relative h-full">
   <Line data={chartData} options={options} />
 </div>
 

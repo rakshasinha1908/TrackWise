@@ -31,15 +31,10 @@ function ExpenseForm({ onAdd }) {
 
   const CATEGORY_OPTIONS = [
     "Food",
-    "Groceries",
     "Transport",
-    "Rent",
     "Shopping",
-    "Entertainment",
     "Bills",
-    "Health",
-    "Travel",
-    "Other",
+    "Others",
   ];
 
   return (
