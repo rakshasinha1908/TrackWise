@@ -5,6 +5,7 @@ import api from "./api";
 import DashboardLayout from "./components/DashboardLayout";
 import AddExpensePage from "./components/AddExpensePage";
 import Sidebar from "./components/Sidebar";
+import BudgetSetup from "./components/BudgetSetup";
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
@@ -34,63 +35,65 @@ export default function App() {
   if (error) return <p className="text-red-600 p-6">API error: {error}</p>;
 
   return (
-  <BrowserRouter>
-    {/* Page background */}
-    <div className="bg-gray-100 p-6 min-h-screen">
+    <BrowserRouter>
+      {/* Page background */}
+      <div className="bg-gray-100 p-6 min-h-screen">
+        {/* Main app container */}
+        <div
+          className="
+            mx-auto
+            max-w-[1400px]
+            bg-white
+            rounded-2xl
+            shadow-sm
+            flex
+            min-h-[calc(100vh-48px)]
+            lg:h-[calc(100vh-48px)]
+          "
+        >
+          {/* Sidebar */}
+          <Sidebar />
 
-      {/* Main app container */}
-      <div className="
-  mx-auto 
-  max-w-[1400px] 
-  bg-white 
-  rounded-2xl 
-  shadow-sm 
-  flex
-  min-h-[calc(100vh-48px)]
-  lg:h-[calc(100vh-48px)]
-">
+          {/* Main Content */}
+          <div className="flex-1">
+            <Routes>
+              {/* Dashboard */}
+              <Route
+                path="/"
+                element={<DashboardLayout expenses={expenses} />}
+              />
+
+              {/* Add Expense */}
+              <Route
+                path="/add"
+                element={
+                  <AddExpensePage
+                    expenses={expenses}
+                    onAdd={handleAdd}
+                  />
+                }
+              />
+
+              {/* Budget Setup */}
+              <Route
+                path="/setup"
+                element={<BudgetSetup />}
+              />
 
 
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main Content */}
-        <div className="flex-1">
-          <Routes>
-
-            {/* Dashboard */}
-            <Route
-              path="/"
-              element={<DashboardLayout expenses={expenses} />}
-            />
-
-            {/* Add Expense */}
-            <Route
-              path="/add"
-              element={
-                <AddExpensePage
-                  expenses={expenses}
-                  onAdd={handleAdd}
-                />
-              }
-            />
-
-            {/* Reports */}
-            <Route
-              path="/reports"
-              element={
-                <div className="p-6 text-gray-600">
-                  Reports page (coming later)
-                </div>
-              }
-            />
-
-          </Routes>
+              {/* Reports */}
+              <Route
+                path="/reports"
+                element={
+                  <div className="p-6 text-gray-600">
+                    Reports page (coming later)
+                  </div>
+                }
+              />
+            </Routes>
+          </div>
         </div>
-
       </div>
-    </div>
-  </BrowserRouter>
-);
-
+    </BrowserRouter>
+  );
 }

@@ -82,7 +82,7 @@ export default function CategoryDonut({ expenses, selectedYear, selectedMonth })
   };
 
   return (
-    <DashboardCard title="Category Breakdown">
+    <DashboardCard title="Category Split">
       <div className="h-[180px] flex items-center gap-3">
 
         {/* Donut */}
@@ -99,18 +99,12 @@ export default function CategoryDonut({ expenses, selectedYear, selectedMonth })
                   <p className="text-sm text-gray-700">
                     ₹{activeValue.toLocaleString()}
                   </p>
-                  {/* <p className="text-xs text-gray-500">
-                    {activeLabel}
-                  </p> */}
                 </>
               ) : (
                 <>
                   <p className="text-lg font-semibold text-gray-900">
                     ₹{totalSpent.toLocaleString()}
                   </p>
-                  {/* <p className="text-xs text-gray-500">
-                    This month
-                  </p> */}
                 </>
               )}
             </div>

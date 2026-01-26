@@ -4,6 +4,7 @@ import {
   faHouse,
   faPlus,
   faChartLine,
+  faGear,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar() {
@@ -40,6 +41,17 @@ export default function Sidebar() {
       >
         <FontAwesomeIcon icon={faPlus} />
       </NavLink>
+
+      {/* Setup */}
+      <NavLink
+        to="/setup"
+        className={({ isActive }) =>
+          `${base} ${isActive ? active : inactive}`
+        }
+      >
+        <FontAwesomeIcon icon={faGear} />
+      </NavLink>
+
 
       {/* Reports */}
       <NavLink
