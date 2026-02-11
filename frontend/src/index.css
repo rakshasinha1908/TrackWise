@@ -1,4 +1,7 @@
 @import "tailwindcss";
+body {
+  @apply font-sans;
+}
 
 /* ===== Premium Range Slider ===== */
 .styled-range {

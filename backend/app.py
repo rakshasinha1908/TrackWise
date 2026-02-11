@@ -80,3 +80,33 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+
+class Budget(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.String(50), nullable=False)  # future-ready
+    month_key = db.Column(db.String(7), nullable=False)  # YYYY-MM
+
+    income = db.Column(db.Integer, nullable=False)
+    savings = db.Column(db.Integer, default=0)
+
+    food = db.Column(db.Integer, nullable=False)
+    shopping = db.Column(db.Integer, nullable=False)
+    transport = db.Column(db.Integer, nullable=False)
+    bills = db.Column(db.Integer, nullable=False)
+    others = db.Column(db.Integer, nullable=False)
+
+    inherited_from = db.Column(db.String(7))  # previous month_key
+    is_auto_generated = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.String, default=lambda: datetime.now().isoformat())
+    updated_at = db.Column(
+        db.String,
+        default=lambda: datetime.now().isoformat(),
+        onupdate=lambda: datetime.now().isoformat()
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "month_key", name="unique_user_month"),
+    )

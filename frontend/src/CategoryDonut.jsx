@@ -7,12 +7,11 @@ import DashboardCard from "./components/DashboardCard";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const CATEGORY_COLORS = [
-  "#4f74f6", // Food
-  "#f7b441", // Shopping
-  "#22a378", // Bills
-  "#fd615a",
-  "#7c8cff",
-  "#4fd1c5",
+  "#f7b447",  
+  "#22a378",  
+  "#fd615a",  
+  "#3B82F6",
+  "#9333EA",
 ];
 
 export default function CategoryDonut({ expenses, selectedYear, selectedMonth }) {

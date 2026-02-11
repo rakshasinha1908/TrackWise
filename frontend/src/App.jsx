@@ -39,18 +39,33 @@ export default function App() {
       {/* Page background */}
       <div className="bg-gray-100 p-6 min-h-screen">
         {/* Main app container */}
-        <div
-          className="
-            mx-auto
-            max-w-[1400px]
-            bg-white
-            rounded-2xl
-            shadow-sm
-            flex
-            min-h-[calc(100vh-48px)]
-            lg:h-[calc(100vh-48px)]
-          "
-        >
+        
+        {/* <div
+  className="
+    mx-auto
+    max-w-[1400px]
+    bg-white
+    rounded-2xl
+    shadow-sm
+    flex
+    min-h-[calc(100vh-48px)]
+  "
+> */}
+<div
+  className="
+    mx-auto
+    w-full
+    max-w-[1400px]
+    bg-white
+    rounded-2xl
+    shadow-sm
+    flex
+    min-h-[calc(100vh-48px)]
+    lg:h-[calc(100vh-48px)]
+    overflow-x-hidden
+  "
+>
+
           {/* Sidebar */}
           <Sidebar />
 
