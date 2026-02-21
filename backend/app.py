@@ -76,12 +76,6 @@ def delete_expense(id):
     db.session.commit()
     return jsonify({"success": True, "message": "Expense deleted"}), 200
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
-
-
 class Budget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -110,3 +104,86 @@ class Budget(db.Model):
     __table_args__ = (
         db.UniqueConstraint("user_id", "month_key", name="unique_user_month"),
     )
+
+
+@app.route("/budget/<month_key>", methods=["GET"])
+def get_budget(month_key):
+
+    # TEMP single user
+    user_id = "demo"
+
+    budget = Budget.query.filter_by(
+        user_id=user_id,
+        month_key=month_key
+    ).first()
+
+    if not budget:
+        return jsonify(None)
+
+    return jsonify({
+        "id": budget.id,
+        "month_key": budget.month_key,
+        "income": budget.income,
+        "savings": budget.savings,
+        "categories": {
+            "Food": budget.food,
+            "Shopping": budget.shopping,
+            "Transport": budget.transport,
+            "Bills": budget.bills,
+            "Others": budget.others,
+        },
+        "inherited_from": budget.inherited_from,
+        "is_auto_generated": budget.is_auto_generated
+    })
+    
+@app.route("/budget/<month_key>", methods=["POST"])
+def save_budget(month_key):
+
+    user_id = "demo"   # temp single user
+
+    data = request.json
+
+    existing = Budget.query.filter_by(
+        user_id=user_id,
+        month_key=month_key
+    ).first()
+
+    if existing:
+        # UPDATE
+        existing.income = data["income"]
+        existing.savings = data["savings"]
+
+        existing.food = data["categories"]["Food"]
+        existing.shopping = data["categories"]["Shopping"]
+        existing.transport = data["categories"]["Transport"]
+        existing.bills = data["categories"]["Bills"]
+        existing.others = data["categories"]["Others"]
+
+    else:
+        # CREATE
+        existing = Budget(
+            user_id=user_id,
+            month_key=month_key,
+            income=data["income"],
+            savings=data["savings"],
+
+            food=data["categories"]["Food"],
+            shopping=data["categories"]["Shopping"],
+            transport=data["categories"]["Transport"],
+            bills=data["categories"]["Bills"],
+            others=data["categories"]["Others"],
+        )
+        db.session.add(existing)
+
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
+
+

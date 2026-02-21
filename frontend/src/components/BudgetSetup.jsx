@@ -9,6 +9,8 @@ import {
   faChevronRight,
   faChevronLeft,
 } from "@fortawesome/free-solid-svg-icons";
+import api from "../api";
+
 
 
 /* -------------------- BREAKPOINT HOOK -------------------- */
@@ -25,7 +27,7 @@ function useIsDesktop(breakpoint = 580) {
   return isDesktop;
 }
 
-function StepIncomeMobile({ value, onChange, onNext }) {
+function StepIncomeMobile({ value, onChange, onNext, isDirty }) {
   return (
     <div className="flex flex-col items-center gap-6 text-center bg-gray-50 p-8 rounded-2xl shadow-xl">
 
@@ -61,14 +63,14 @@ function StepIncomeMobile({ value, onChange, onNext }) {
         onClick={onNext}
         className="w-full max-w-[260px] py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold"
       >
-        Next
+        {isDirty ? "Save" : "Next"}
       </button>
     </div>
   );
 }
 
 /* -------------------- STEP 1 : DESKTOP -------------------- */
-function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep }) {
+function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep, isDirty, setIsDirty, saveBudget }) {
   return (
     <div className="w-full flex items-center justify-center">
       <div
@@ -115,7 +117,10 @@ function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep }) {
                 <input
                   type="number"
                   value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                  onChange={(e) => {
+                    setMonthlyIncome(e.target.value);
+                  }}
+
                   placeholder="Enter income"
                   className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
                 />
@@ -132,10 +137,18 @@ function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep }) {
         {/* CTA */}
         <div className="mt-2 mb-2 flex justify-center">
           <button
-            onClick={() => setStep(1)}
+              onClick={async () => {
+
+                if (isDirty) {
+                  await saveBudget();
+                  return;
+                }             
+                setStep(1);
+              }}
+
             className="w-[260px] py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold shadow-md hover:opacity-90 transition"
           >
-            Next
+            {isDirty ? "Save" : "Next"}
           </button>
         </div>
       </div>
@@ -144,7 +157,7 @@ function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep }) {
 }
 
 
-function StepSavingsMobile({ savings, setSavings, spendable, onNext }) {
+function StepSavingsMobile({ savings, setSavings, spendable, onNext, isDirty }) {
   return (
     <div className="flex flex-col items-center gap-6 text-center bg-gray-50 p-8 rounded-2xl shadow-xl">
 
@@ -187,14 +200,14 @@ function StepSavingsMobile({ savings, setSavings, spendable, onNext }) {
         onClick={onNext}
         className="w-full max-w-[260px] py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold"
       >
-        Next
+        {isDirty ? "Save" : "Next"}
       </button>
     </div>
   );
 }
 
 
-function StepSavingsDesktop({ savings, setSavings, spendable, setStep }) {
+function StepSavingsDesktop({ savings, setSavings, spendable, setStep, isDirty }) {
   return (
     <div className="w-full flex items-center justify-center overflow-hidden">
       <div className="relative w-full max-w-[620px] h-[330px] rounded-3xl bg-gradient-to-br from-[#f6f2ff] to-[#eae5ff]  pt-8 pb-8 flex gap-6 items-center">
@@ -244,7 +257,7 @@ function StepSavingsDesktop({ savings, setSavings, spendable, setStep }) {
             onClick={() => setStep(2)}
             className="w-[260px] py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold shadow-md hover:opacity-90 transition"
           >
-            Next
+            {isDirty ? "Save" : "Next"}
           </button>
         </div>
       </div>
@@ -491,6 +504,8 @@ export default function BudgetSetup() {
   const [step, setStep] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState("");
   const [savings, setSavings] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+
 
   const spendable = Math.max(
     0,
@@ -506,6 +521,69 @@ export default function BudgetSetup() {
     Bills: 7000,
     Others: 7000,
   });
+
+  const [loaded, setLoaded] = useState(false);
+
+useEffect(() => {
+
+  if (!loaded) return;
+
+  const timer = setTimeout(() => {
+    saveBudget();
+  }, 800);
+
+  return () => clearTimeout(timer);
+
+}, [monthlyIncome, savings, categories, loaded]);
+  
+  useEffect(() => {
+  const loadBudget = async () => {
+
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+    try {
+      const res = await api.get(`/budget/${monthKey}`);
+
+      if (res.data) {
+        setMonthlyIncome(res.data.income || "");
+        setSavings(res.data.savings || "");
+        setCategories(res.data.categories || {});
+      }
+
+    } catch (err) {
+      console.log("No budget found yet");
+    }
+
+  };
+
+  loadBudget().then(() => setLoaded(true));
+}, []);
+
+const saveBudget = async () => {
+
+  const now = new Date();
+  const monthKey =
+    `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+  try {
+
+    await api.post(`/budget/${monthKey}`, {
+      month_key: monthKey,
+      income: monthlyIncome,
+      savings: savings,
+      categories: categories
+    });
+
+     
+
+
+  } catch (err) {
+    console.error(err);
+    alert("Save failed");
+  }
+
+};
 
   const [openCat, setOpenCat] = useState(null);
 
@@ -594,30 +672,54 @@ export default function BudgetSetup() {
                     monthlyIncome={monthlyIncome}
                     setMonthlyIncome={setMonthlyIncome}
                     setStep={setStep}
+                    isDirty={isDirty}
+                    setIsDirty={setIsDirty}
+                    saveBudget={saveBudget}
                   />
                 ) : (
                   <StepIncomeMobile
-                    value={monthlyIncome}
-                    onChange={setMonthlyIncome}
-                    onNext={() => setStep(1)}
-                  />
+  value={monthlyIncome}
+  onChange={setMonthlyIncome}
+  isDirty={isDirty}
+  onNext={async () => {
+    if (isDirty) {
+      await saveBudget();
+      return;
+    }
+    setStep(1);
+  }}
+/>
                 )}
               </div>
 
               <div className="min-w-full flex items-center justify-center">
                 {isDesktop ? (
                   <StepSavingsDesktop
-                    savings={savings}
-                    setSavings={setSavings}
-                    spendable={spendable}
-                    setStep={setStep}
-                  />
+  savings={savings}
+  setSavings={setSavings}
+  spendable={spendable}
+  isDirty={isDirty}
+  setStep={async () => {
+    if (isDirty) {
+      await saveBudget();
+      return;
+    }
+    setStep(2);
+  }}
+/>
                 ) : (
                   <StepSavingsMobile
                     savings={savings}
                     setSavings={setSavings}
                     spendable={spendable}
-                    onNext={() => setStep(2)}
+                    isDirty={isDirty}
+                    onNext={async () => {
+  if (isDirty) {
+    await saveBudget();
+    return;
+  }
+  setStep(2);
+}}
                   />
                 )}
               </div>
@@ -686,4 +788,3 @@ export default function BudgetSetup() {
 }
 
 
- 
