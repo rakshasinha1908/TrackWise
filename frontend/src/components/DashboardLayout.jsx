@@ -4,7 +4,7 @@ import WeeklyBar from "../WeeklyBar";
 import KPICard from "./KPICard";
 import SmartTips from "./SmartTips";
 import RecentExpensesCard from "./RecentExpensesCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   getMonthlyTotals,
   aggregateCategories,
@@ -13,12 +13,15 @@ import {
   compareMonths,
   generateSmartTips,
 } from "../utils/insights";
+import api from "../api";
 
 export default function DashboardLayout({ expenses }) {
   const now = new Date();
 
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [kpi,setKpi]=useState(null);
+  const [tips,setTips]=useState([]);
 
   const { currentTotal, previousTotal } =
     getMonthlyTotals(expenses, selectedYear, selectedMonth);
@@ -40,6 +43,50 @@ export default function DashboardLayout({ expenses }) {
     growth,
     savings: 1000, // demo for now
   });
+
+//   useEffect(() => {
+
+//   const loadKPI = async () => {
+
+//     const key =
+//       `${selectedYear}-${String(selectedMonth + 1).padStart(2,"0")}`;
+
+//     const res = await api.get(`/dashboard-kpi/${key}`);
+
+//     setKpi(res.data);
+
+//   };
+
+//   loadKPI();
+
+// }, [selectedYear, selectedMonth]);
+
+// const loadTips = async () => {
+//   const key = `${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
+//   const res = await api.get(`/smart-tips/${key}`);
+//   setTips(res.data);
+// };
+
+// loadTips();
+
+useEffect(()=>{
+
+  const key=`${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
+
+  const loadKPI=async()=>{
+    const res=await api.get(`/dashboard-kpi/${key}`);
+    setKpi(res.data);
+  };
+
+  const loadTips=async()=>{
+    const res=await api.get(`/smart-tips/${key}`);
+    setTips(res.data);
+  };
+
+  loadKPI();
+  loadTips();
+
+},[selectedYear,selectedMonth]);
 
   console.log("SMART TIPS:", smartTips);
 
@@ -142,22 +189,22 @@ export default function DashboardLayout({ expenses }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Total Spend" value="₹25,100" change="12%" />
+                  <KPICard label="Total Spend" value={`₹${kpi?.total_spend ?? 0}`}  change={`${Math.abs(kpi?.change_pct ?? 0)}%`} rawChange={kpi?.change_pct} />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Avg / Day" value="₹840" change="5%" />
+                  <KPICard label="Avg / Day" value={`₹${kpi?.avg_day ?? 0}`} change={`${kpi?.avg_change_pct ?? 0}%`} rawChange={kpi?.avg_change_pct} />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Vs Budget" value="87%" change="5%" />
+                  <KPICard label="Vs Budget" value={`${kpi?.budget_used ?? 0}%`} change={`${kpi?.budget_change_pct ?? 0}%`} rawChange={kpi?.budget_change_pct} />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Txns" value="32" change="22%" />
+                  <KPICard label="Txns" value={kpi?.txn_count ?? 0} change={`${kpi?.txn_change_pct ?? 0}%`} rawChange={kpi?.txn_change_pct} />
                 </div>
               </div>
             </div>
 
             <div className="w-full lg:h-[240px] lg:max-w-[200px]">
-              <SmartTips tips={smartTips} />
+              <SmartTips tips={tips} />
             </div>
 
             <div className="w-full lg:h-[250px] lg:max-w-[250px]">

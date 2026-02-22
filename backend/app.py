@@ -106,10 +106,39 @@ class Budget(db.Model):
     )
 
 
+# @app.route("/budget/<month_key>", methods=["GET"])
+# def get_budget(month_key):
+
+#     # TEMP single user
+#     user_id = "demo"
+
+#     budget = Budget.query.filter_by(
+#         user_id=user_id,
+#         month_key=month_key
+#     ).first()
+
+#     if not budget:
+#         return jsonify(None)
+
+#     return jsonify({
+#         "id": budget.id,
+#         "month_key": budget.month_key,
+#         "income": budget.income,
+#         "savings": budget.savings,
+#         "categories": {
+#             "Food": budget.food,
+#             "Shopping": budget.shopping,
+#             "Transport": budget.transport,
+#             "Bills": budget.bills,
+#             "Others": budget.others,
+#         },
+#         "inherited_from": budget.inherited_from,
+#         "is_auto_generated": budget.is_auto_generated
+#     })
+
 @app.route("/budget/<month_key>", methods=["GET"])
 def get_budget(month_key):
 
-    # TEMP single user
     user_id = "demo"
 
     budget = Budget.query.filter_by(
@@ -117,24 +146,76 @@ def get_budget(month_key):
         month_key=month_key
     ).first()
 
-    if not budget:
-        return jsonify(None)
+    # ✅ IF EXISTS → RETURN NORMAL
+    if budget:
+        return jsonify({
+            "id": budget.id,
+            "month_key": budget.month_key,
+            "income": budget.income,
+            "savings": budget.savings,
+            "categories": {
+                "Food": budget.food,
+                "Shopping": budget.shopping,
+                "Transport": budget.transport,
+                "Bills": budget.bills,
+                "Others": budget.others,
+            },
+            "inherited_from": budget.inherited_from,
+            "is_auto_generated": budget.is_auto_generated
+        })
 
-    return jsonify({
-        "id": budget.id,
-        "month_key": budget.month_key,
-        "income": budget.income,
-        "savings": budget.savings,
-        "categories": {
-            "Food": budget.food,
-            "Shopping": budget.shopping,
-            "Transport": budget.transport,
-            "Bills": budget.bills,
-            "Others": budget.others,
-        },
-        "inherited_from": budget.inherited_from,
-        "is_auto_generated": budget.is_auto_generated
-    })
+    # 🔥 IF NOT EXISTS → TRY PREVIOUS MONTH
+
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+
+    current = datetime.strptime(month_key, "%Y-%m")
+    prev = current - relativedelta(months=1)
+    prev_key = prev.strftime("%Y-%m")
+
+    prev_budget = Budget.query.filter_by(
+        user_id=user_id,
+        month_key=prev_key
+    ).first()
+
+    # ✅ IF PREVIOUS EXISTS → COPY IT
+    if prev_budget:
+
+        new_budget = Budget(
+            user_id=user_id,
+            month_key=month_key,
+            income=prev_budget.income,
+            savings=prev_budget.savings,
+            food=prev_budget.food,
+            shopping=prev_budget.shopping,
+            transport=prev_budget.transport,
+            bills=prev_budget.bills,
+            others=prev_budget.others,
+            inherited_from=prev_key,
+            is_auto_generated=True
+        )
+
+        db.session.add(new_budget)
+        db.session.commit()
+
+        return jsonify({
+            "id": new_budget.id,
+            "month_key": new_budget.month_key,
+            "income": new_budget.income,
+            "savings": new_budget.savings,
+            "categories": {
+                "Food": new_budget.food,
+                "Shopping": new_budget.shopping,
+                "Transport": new_budget.transport,
+                "Bills": new_budget.bills,
+                "Others": new_budget.others,
+            },
+            "inherited_from": new_budget.inherited_from,
+            "is_auto_generated": new_budget.is_auto_generated
+        })
+
+    # ❌ IF NOTHING EXISTS → RETURN NULL
+    return jsonify(None)
     
 @app.route("/budget/<month_key>", methods=["POST"])
 def save_budget(month_key):
@@ -179,6 +260,414 @@ def save_budget(month_key):
 
     return jsonify({"success": True})
 
+@app.route("/dashboard-kpi/<month_key>")
+def dashboard_kpi(month_key):
+
+    from datetime import datetime
+    import calendar
+
+    user_id = "demo"
+
+    # -------- PARSE MONTH --------
+    year, month = map(int, month_key.split("-"))
+
+    start = datetime(year, month, 1)
+    end = datetime(year+1,1,1) if month==12 else datetime(year,month+1,1)
+
+    # -------- CURRENT EXPENSES --------
+    txns = []
+    for e in Expense.query.all():
+        d = datetime.strptime(e.date,"%Y-%m-%d")
+        if start <= d < end:
+            txns.append(e)
+
+    total_spend = sum(t.amount for t in txns)
+    txn_count = len(txns)
+
+    # -------- DAYS --------
+    today = datetime.today()
+    if today.year==year and today.month==month:
+        days = today.day
+    else:
+        days = calendar.monthrange(year,month)[1]
+
+    avg_day = total_spend/max(days,1)
+
+    # -------- CURRENT BUDGET --------
+    budget = Budget.query.filter_by(
+        user_id=user_id,
+        month_key=month_key
+    ).first()
+
+    total_budget = 0
+    if budget:
+        total_budget = (
+            budget.food +
+            budget.shopping +
+            budget.transport +
+            budget.bills +
+            budget.others
+        )
+
+    budget_used_pct = 0
+    if total_budget>0:
+        budget_used_pct = (total_spend/total_budget)*100
+
+    # -------- PREVIOUS MONTH KEY --------
+    if month==1:
+        prev_year,prev_month = year-1,12
+    else:
+        prev_year,prev_month = year,month-1
+
+    prev_key=f"{prev_year}-{str(prev_month).zfill(2)}"
+
+    # -------- PREVIOUS EXPENSES --------
+    prev_start=datetime(prev_year,prev_month,1)
+    prev_end=datetime(prev_year+1,1,1) if prev_month==12 else datetime(prev_year,prev_month+1,1)
+
+    prev_txns=[]
+    for e in Expense.query.all():
+        d=datetime.strptime(e.date,"%Y-%m-%d")
+        if prev_start<=d<prev_end:
+            prev_txns.append(e)
+
+    prev_spend=sum(t.amount for t in prev_txns)
+    
+    prev_txn_count = len(prev_txns)
+
+    txn_change_pct = 0
+    if prev_txn_count > 0:
+        txn_change_pct = ((txn_count - prev_txn_count) / prev_txn_count) * 100
+
+    change_pct=0
+    if prev_spend>0:
+        change_pct=((total_spend-prev_spend)/prev_spend)*100
+
+    # -------- PREVIOUS AVG --------
+    prev_days=calendar.monthrange(prev_year,prev_month)[1]
+    prev_avg=prev_spend/max(prev_days,1)
+
+    avg_change_pct=0
+    if prev_avg>0:
+        avg_change_pct=((avg_day-prev_avg)/prev_avg)*100
+
+    # -------- PREVIOUS BUDGET --------
+    prev_budget = Budget.query.filter_by(
+        user_id=user_id,
+        month_key=prev_key
+    ).first()
+
+    budget_change_pct=0
+    if budget and prev_budget:
+
+        curr_total = (
+            budget.food +
+            budget.shopping +
+            budget.transport +
+            budget.bills +
+            budget.others
+        )
+
+        prev_total = (
+            prev_budget.food +
+            prev_budget.shopping +
+            prev_budget.transport +
+            prev_budget.bills +
+            prev_budget.others
+        )
+
+        if prev_total>0:
+            budget_change_pct=((curr_total-prev_total)/prev_total)*100
+
+    # -------- RETURN --------
+    return jsonify({
+        "total_spend": round(total_spend),
+        "avg_day": round(avg_day,1),
+        "txn_count": txn_count,
+        "budget_used": round(budget_used_pct),
+        "change_pct": round(change_pct),
+        "avg_change_pct": round(avg_change_pct),
+        "budget_change_pct": round(budget_change_pct),
+        "txn_change_pct": round(txn_change_pct)
+    })
+    
+# @app.route("/smart-tips/<month_key>")
+# def smart_tips(month_key):
+
+#     from datetime import datetime
+#     import calendar
+
+#     user_id = "demo"
+
+#     # ---------- MONTH RANGE ----------
+#     year, month = map(int, month_key.split("-"))
+#     start = datetime(year, month, 1)
+
+#     if month == 12:
+#         end = datetime(year + 1, 1, 1)
+#     else:
+#         end = datetime(year, month + 1, 1)
+
+#     # ---------- GET EXPENSES ----------
+#     expenses = []
+
+#     for e in Expense.query.all():
+#         d = datetime.strptime(e.date, "%Y-%m-%d")
+#         if start <= d < end:
+#             expenses.append(e)
+
+#     total_spend = sum(e.amount for e in expenses)
+
+#     # ---------- GET BUDGET ----------
+#     budget = Budget.query.filter_by(
+#         user_id=user_id,
+#         month_key=month_key
+#     ).first()
+
+#     tips = []
+
+#     # ---------- DAYS PASSED ----------
+#     today = datetime.today()
+
+#     if today.year == year and today.month == month:
+#         days_passed = today.day
+#     else:
+#         days_passed = calendar.monthrange(year, month)[1]
+
+#     progress = days_passed / calendar.monthrange(year, month)[1]
+
+#     # ---------- CATEGORY SPEND ----------
+#     cat_spend = {}
+
+#     for e in expenses:
+#         cat_spend[e.category] = cat_spend.get(e.category, 0) + e.amount
+
+#     # ---------- CHECK AGAINST BUDGET ----------
+#     if budget:
+
+#         cat_budget = {
+#             "Food": budget.food,
+#             "Shopping": budget.shopping,
+#             "Transport": budget.transport,
+#             "Bills": budget.bills,
+#             "Others": budget.others
+#         }
+
+#         for cat, spent in cat_spend.items():
+
+#             b = cat_budget.get(cat, 0)
+
+#             if b == 0:
+#                 continue
+
+#             used = spent / b
+
+#             # 🚨 FAST SPENDING WARNING
+#             if used > progress + 0.25:
+#                 tips.append({
+#                     "score": 90,
+#                     "title": "Spending too fast",
+#                     "msg": f"You already used {int(used*100)}% of your {cat} budget."
+#                 })
+
+#             # ⚠️ NEAR LIMIT
+#             elif used > 0.8:
+#                 tips.append({
+#                     "score": 70,
+#                     "title": "Almost at limit",
+#                     "msg": f"{cat} budget is {int(used*100)}% used."
+#                 })
+
+#             # ✅ GOOD TRACK
+#             elif used < progress:
+#                 tips.append({
+#                     "score": 40,
+#                     "title": "Good control",
+#                     "msg": f"{cat} spending is under control."
+#                 })
+
+#     # ---------- TOTAL SPEND WARNING ----------
+#     total_budget = 0
+#     if budget:
+#         total_budget = (
+#             budget.food +
+#             budget.shopping +
+#             budget.transport +
+#             budget.bills +
+#             budget.others
+#         )
+
+#     if total_budget > 0:
+
+#         used = total_spend / total_budget
+
+#         if used > progress + 0.20:
+#             tips.append({
+#                 "score": 95,
+#                 "title": "Overall spending high",
+#                 "msg": "Your total spending pace is higher than expected."
+#             })
+
+#         elif used < progress:
+#             tips.append({
+#                 "score": 45,
+#                 "title": "Great pacing",
+#                 "msg": "Your total spending is well paced this month."
+#             })
+
+#     tips.sort(key=lambda x: x["score"], reverse=True)
+
+#     return jsonify(tips[:5])
+
+@app.route("/smart-tips/<month_key>")
+def smart_tips(month_key):
+
+    from datetime import datetime
+    import calendar
+
+    user_id="demo"
+
+    year,month=map(int,month_key.split("-"))
+    start=datetime(year,month,1)
+
+    if month==12:
+        end=datetime(year+1,1,1)
+    else:
+        end=datetime(year,month+1,1)
+
+    # ---------- EXPENSES ----------
+    txns=[]
+    for e in Expense.query.all():
+        d=datetime.strptime(e.date,"%Y-%m-%d")
+        if start<=d<end:
+            txns.append(e)
+
+    total_spend=sum(t.amount for t in txns)
+
+    # ---------- DAYS ----------
+    today=datetime.today()
+
+    if today.year==year and today.month==month:
+        day=today.day
+    else:
+        day=calendar.monthrange(year,month)[1]
+
+    days_in_month=calendar.monthrange(year,month)[1]
+
+    month_progress=day/days_in_month
+
+    # ---------- CATEGORY TOTALS ----------
+    category_spend={}
+    for t in txns:
+        category_spend[t.category]=category_spend.get(t.category,0)+t.amount
+
+    # ---------- BUDGET ----------
+    budget=Budget.query.filter_by(user_id=user_id,month_key=month_key).first()
+
+    tips=[]
+
+    if budget:
+
+        budgets={
+            "Food":budget.food,
+            "Shopping":budget.shopping,
+            "Transport":budget.transport,
+            "Bills":budget.bills,
+            "Others":budget.others
+        }
+
+        total_budget=sum(budgets.values())
+
+        # =============================
+        # 1️⃣ TOTAL PACING CHECK
+        # =============================
+        if total_budget>0:
+
+            usage=total_spend/total_budget
+
+            if usage>month_progress+0.20:
+                tips.append({
+                    "title":"Spending too fast",
+                    "msg":f"You've used {int(usage*100)}% of your budget but only {int(month_progress*100)}% of month passed.",
+                    "score":95,
+                    "type":"warning"
+                })
+
+            elif usage<month_progress-0.20:
+                tips.append({
+                    "title":"Great pacing",
+                    "msg":"Your spending is well controlled this month.",
+                    "score":40,
+                    "type":"good"
+                })
+
+        # =============================
+        # 2️⃣ CATEGORY EARLY WARNING
+        # =============================
+        for cat,spent in category_spend.items():
+
+            b=budgets.get(cat,0)
+            if b<=0: continue
+
+            pct=spent/b
+
+            # spent 40% in first 20% month → warning
+            if pct>0.4 and month_progress<0.3:
+
+                tips.append({
+                    "title":f"{cat} spending high early",
+                    "msg":f"You already used {int(pct*100)}% of {cat} budget very early.",
+                    "score":90,
+                    "type":"danger"
+                })
+
+            elif pct>0.8:
+
+                tips.append({
+                    "title":f"{cat} budget almost finished",
+                    "msg":f"{cat} budget is {int(pct*100)}% used.",
+                    "score":85,
+                    "type":"warning"
+                })
+
+            elif pct<month_progress:
+
+                tips.append({
+                    "title":f"{cat} under control",
+                    "msg":f"{cat} spending looks healthy.",
+                    "score":30,
+                    "type":"good"
+                })
+
+        # =============================
+        # 3️⃣ SAVINGS CHECK
+        # =============================
+        if budget.savings>0:
+
+            spendable=budget.income-budget.savings
+
+            if spendable>0 and total_spend>spendable:
+
+                tips.append({
+                    "title":"Savings goal broken",
+                    "msg":"You exceeded spendable income. Savings at risk.",
+                    "score":100,
+                    "type":"danger"
+                })
+
+    # ---------- ALWAYS HAVE SOMETHING ----------
+    if not tips:
+        tips.append({
+            "title":"Good start",
+            "msg":"Add expenses to unlock smart insights.",
+            "score":10,
+            "type":"info"
+        })
+
+    # ---------- SORT + RETURN TOP MANY ----------
+    tips.sort(key=lambda x:x["score"],reverse=True)
+
+    return jsonify(tips[:12])
 
 
 if __name__ == "__main__":

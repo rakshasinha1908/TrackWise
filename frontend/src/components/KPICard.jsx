@@ -1,4 +1,12 @@
-export default function KPICard({ label, value, change }) {
+export default function KPICard({ label, value, change, rawChange }) {
+  const numericChange = Number(rawChange ?? 0);
+
+  // decide if decrease is good or bad depending on KPI
+  const lowerIsBetter =
+    label === "Total Spend" ||
+    label === "Avg / Day" ||
+    label === "Txns";
+  const isGood = lowerIsBetter ? numericChange < 0 : numericChange >= 0;
   return (
     <div
       className="
@@ -21,10 +29,9 @@ export default function KPICard({ label, value, change }) {
         </p>
 
         {change && (
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-green-600">
-            <span>↑</span>
-            <span>{change}</span>
-          </div>
+          <p className={`text-sm font-semibold ${isGood ? "text-green-600" : "text-red-600"}`}>
+            {numericChange < 0 ? "↓" : "↑"} {Math.abs(numericChange)}%
+          </p>
         )}
       </div>
     </div>

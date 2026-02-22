@@ -506,7 +506,6 @@ export default function BudgetSetup() {
   const [savings, setSavings] = useState("");
   const [isDirty, setIsDirty] = useState(false);
 
-
   const spendable = Math.max(
     0,
     (Number(monthlyIncome) || 0) - (Number(savings) || 0)
@@ -524,66 +523,57 @@ export default function BudgetSetup() {
 
   const [loaded, setLoaded] = useState(false);
 
-useEffect(() => {
-
-  if (!loaded) return;
-
-  const timer = setTimeout(() => {
-    saveBudget();
-  }, 800);
-
-  return () => clearTimeout(timer);
-
-}, [monthlyIncome, savings, categories, loaded]);
-  
   useEffect(() => {
-  const loadBudget = async () => {
+    if (!loaded) return;
 
+    const timer = setTimeout(() => {
+      saveBudget();
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [monthlyIncome, savings, categories, loaded]);
+
+  useEffect(() => {
+    const loadBudget = async () => {
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(
+        now.getMonth() + 1
+      ).padStart(2, "0")}`;
+
+      try {
+        const res = await api.get(`/budget/${monthKey}`);
+
+        if (res.data) {
+          setMonthlyIncome(res.data.income || "");
+          setSavings(res.data.savings || "");
+          setCategories(res.data.categories || {});
+        }
+      } catch (err) {
+        console.log("No budget found yet");
+      }
+    };
+
+    loadBudget().then(() => setLoaded(true));
+  }, []);
+
+  const saveBudget = async () => {
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    const monthKey = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
 
     try {
-      const res = await api.get(`/budget/${monthKey}`);
-
-      if (res.data) {
-        setMonthlyIncome(res.data.income || "");
-        setSavings(res.data.savings || "");
-        setCategories(res.data.categories || {});
-      }
-
+      await api.post(`/budget/${monthKey}`, {
+        month_key: monthKey,
+        income: monthlyIncome,
+        savings: savings,
+        categories: categories,
+      });
     } catch (err) {
-      console.log("No budget found yet");
+      console.error(err);
+      alert("Save failed");
     }
-
   };
-
-  loadBudget().then(() => setLoaded(true));
-}, []);
-
-const saveBudget = async () => {
-
-  const now = new Date();
-  const monthKey =
-    `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-
-  try {
-
-    await api.post(`/budget/${monthKey}`, {
-      month_key: monthKey,
-      income: monthlyIncome,
-      savings: savings,
-      categories: categories
-    });
-
-     
-
-
-  } catch (err) {
-    console.error(err);
-    alert("Save failed");
-  }
-
-};
 
   const [openCat, setOpenCat] = useState(null);
 
@@ -628,8 +618,7 @@ const saveBudget = async () => {
   const SLIDER_MIN = 0;
   const SLIDER_MAX = spendable;
 
-  const clamp = (v) =>
-    Math.min(Math.max(v || 0, SLIDER_MIN), SLIDER_MAX);
+  const clamp = (v) => Math.min(Math.max(v || 0, SLIDER_MIN), SLIDER_MAX);
 
   const allocated = Object.values(categories).reduce((a, b) => a + b, 0);
   const overBudget = allocated > spendable;
@@ -648,6 +637,7 @@ const saveBudget = async () => {
 
         {/* SLIDER STAGE */}
         <div className="relative w-full max-w-[420px] md:h-[70vh] flex items-center">
+
           {/* LEFT ARROW — DESKTOP ONLY */}
           <button
             onClick={() => step > 0 && setStep(step - 1)}
@@ -666,6 +656,7 @@ const saveBudget = async () => {
               className="flex transition-transform duration-500 ease-in-out w-full h-full"
               style={{ transform: `translateX(-${step * 100}%)` }}
             >
+
               <div className="min-w-full flex items-center justify-center">
                 {isDesktop ? (
                   <StepIncomeDesktop
@@ -678,35 +669,35 @@ const saveBudget = async () => {
                   />
                 ) : (
                   <StepIncomeMobile
-  value={monthlyIncome}
-  onChange={setMonthlyIncome}
-  isDirty={isDirty}
-  onNext={async () => {
-    if (isDirty) {
-      await saveBudget();
-      return;
-    }
-    setStep(1);
-  }}
-/>
+                    value={monthlyIncome}
+                    onChange={setMonthlyIncome}
+                    isDirty={isDirty}
+                    onNext={async () => {
+                      if (isDirty) {
+                        await saveBudget();
+                        return;
+                      }
+                      setStep(1);
+                    }}
+                  />
                 )}
               </div>
 
               <div className="min-w-full flex items-center justify-center">
                 {isDesktop ? (
                   <StepSavingsDesktop
-  savings={savings}
-  setSavings={setSavings}
-  spendable={spendable}
-  isDirty={isDirty}
-  setStep={async () => {
-    if (isDirty) {
-      await saveBudget();
-      return;
-    }
-    setStep(2);
-  }}
-/>
+                    savings={savings}
+                    setSavings={setSavings}
+                    spendable={spendable}
+                    isDirty={isDirty}
+                    setStep={async () => {
+                      if (isDirty) {
+                        await saveBudget();
+                        return;
+                      }
+                      setStep(2);
+                    }}
+                  />
                 ) : (
                   <StepSavingsMobile
                     savings={savings}
@@ -714,12 +705,12 @@ const saveBudget = async () => {
                     spendable={spendable}
                     isDirty={isDirty}
                     onNext={async () => {
-  if (isDirty) {
-    await saveBudget();
-    return;
-  }
-  setStep(2);
-}}
+                      if (isDirty) {
+                        await saveBudget();
+                        return;
+                      }
+                      setStep(2);
+                    }}
                   />
                 )}
               </div>
@@ -753,6 +744,7 @@ const saveBudget = async () => {
                   />
                 )}
               </div>
+
             </div>
           </div>
 
@@ -786,5 +778,4 @@ const saveBudget = async () => {
     </div>
   );
 }
-
 
