@@ -27,14 +27,15 @@ function useIsDesktop(breakpoint = 580) {
   return isDesktop;
 }
 
-function StepIncomeMobile({ value, onChange, onNext, isDirty }) {
+function StepIncomeMobile({ value, onChange, onNext }) {
   return (
-    <div className="flex flex-col items-center gap-6 text-center bg-gray-50 p-8 rounded-2xl shadow-xl">
+    // <div className="flex flex-col items-center gap-6 text-center bg-gray-50 p-8 rounded-2xl shadow-xl">
+    <div className="flex flex-col items-center gap-6 text-center bg-gray-50 px-4 py-8 sm:p-8 rounded-2xl shadow-xl " >
 
       <img
         src="/income-jar.png"
         alt="Income"
-        className="w-[120px]"
+        className="w-24 sm:w-[120px] max-w-full"
       />
 
       <div>
@@ -46,7 +47,7 @@ function StepIncomeMobile({ value, onChange, onNext, isDirty }) {
         </p>
       </div>
 
-      <div className="relative w-full max-w-[260px]">
+      <div className="relative w-full w-full sm:max-w-[260px]">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
           ₹
         </span>
@@ -63,14 +64,14 @@ function StepIncomeMobile({ value, onChange, onNext, isDirty }) {
         onClick={onNext}
         className="w-full max-w-[260px] py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold"
       >
-        {isDirty ? "Save" : "Next"}
+        Next
       </button>
     </div>
   );
 }
 
 /* -------------------- STEP 1 : DESKTOP -------------------- */
-function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep, isDirty, setIsDirty, saveBudget }) {
+function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep, saveBudget }) {
   return (
     <div className="w-full flex items-center justify-center">
       <div
@@ -137,18 +138,11 @@ function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep, isDirty, 
         {/* CTA */}
         <div className="mt-2 mb-2 flex justify-center">
           <button
-              onClick={async () => {
-
-                if (isDirty) {
-                  await saveBudget();
-                  return;
-                }             
-                setStep(1);
-              }}
+              onClick={() => setStep(1)}
 
             className="w-[260px] py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold shadow-md hover:opacity-90 transition"
           >
-            {isDirty ? "Save" : "Next"}
+            Next
           </button>
         </div>
       </div>
@@ -157,7 +151,7 @@ function StepIncomeDesktop({ monthlyIncome, setMonthlyIncome, setStep, isDirty, 
 }
 
 
-function StepSavingsMobile({ savings, setSavings, spendable, onNext, isDirty }) {
+function StepSavingsMobile({ savings, setSavings, spendable, onNext}) {
   return (
     <div className="flex flex-col items-center gap-6 text-center bg-gray-50 p-8 rounded-2xl shadow-xl">
 
@@ -200,14 +194,14 @@ function StepSavingsMobile({ savings, setSavings, spendable, onNext, isDirty }) 
         onClick={onNext}
         className="w-full max-w-[260px] py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold"
       >
-        {isDirty ? "Save" : "Next"}
+        Next
       </button>
     </div>
   );
 }
 
 
-function StepSavingsDesktop({ savings, setSavings, spendable, setStep, isDirty }) {
+function StepSavingsDesktop({ savings, setSavings, spendable, setStep}) {
   return (
     <div className="w-full flex items-center justify-center overflow-hidden">
       <div className="relative w-full max-w-[620px] h-[330px] rounded-3xl bg-gradient-to-br from-[#f6f2ff] to-[#eae5ff]  pt-8 pb-8 flex gap-6 items-center">
@@ -257,7 +251,7 @@ function StepSavingsDesktop({ savings, setSavings, spendable, setStep, isDirty }
             onClick={() => setStep(2)}
             className="w-[260px] py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold shadow-md hover:opacity-90 transition"
           >
-            {isDirty ? "Save" : "Next"}
+            Next
           </button>
         </div>
       </div>
@@ -504,7 +498,6 @@ export default function BudgetSetup() {
   const [step, setStep] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState("");
   const [savings, setSavings] = useState("");
-  const [isDirty, setIsDirty] = useState(false);
 
   const spendable = Math.max(
     0,
@@ -546,7 +539,10 @@ export default function BudgetSetup() {
         if (res.data) {
           setMonthlyIncome(res.data.income || "");
           setSavings(res.data.savings || "");
-          setCategories(res.data.categories || {});
+          setCategories((prev) => ({
+            ...prev,
+            ...(res.data.categories || {}),
+          }));
         }
       } catch (err) {
         console.log("No budget found yet");
@@ -624,8 +620,9 @@ export default function BudgetSetup() {
   const overBudget = allocated > spendable;
 
   return (
-    <div className="h-[calc(100vh-48px)] w-full flex items-center justify-center px-4 min-[580px]:px-0 bg-white overflow-hidden">
-      <div className="max-w-[620px]">
+    <div className="min-h-[calc(100vh-48px)] w-full flex items-center justify-center px-2 sm:px-4 bg-white overflow-hidden">
+      <div className="w-full max-w-[420px] mx-auto">
+       
         <div className="text-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">
             Budget Setup
@@ -636,8 +633,8 @@ export default function BudgetSetup() {
         </div>
 
         {/* SLIDER STAGE */}
-        <div className="relative w-full max-w-[420px] md:h-[70vh] flex items-center">
-
+          <div className="relative w-full md:h-[70vh] flex items-center">
+          
           {/* LEFT ARROW — DESKTOP ONLY */}
           <button
             onClick={() => step > 0 && setStep(step - 1)}
@@ -651,71 +648,50 @@ export default function BudgetSetup() {
           </button>
 
           {/* CLIPPED TRACK */}
-          <div className="relative w-full h-full overflow-hidden">
+          <div className="relative w-full overflow-hidden">
             <div
               className="flex transition-transform duration-500 ease-in-out w-full h-full"
               style={{ transform: `translateX(-${step * 100}%)` }}
             >
 
               <div className="min-w-full flex items-center justify-center">
+               
                 {isDesktop ? (
                   <StepIncomeDesktop
                     monthlyIncome={monthlyIncome}
                     setMonthlyIncome={setMonthlyIncome}
                     setStep={setStep}
-                    isDirty={isDirty}
-                    setIsDirty={setIsDirty}
-                    saveBudget={saveBudget}
                   />
                 ) : (
                   <StepIncomeMobile
                     value={monthlyIncome}
                     onChange={setMonthlyIncome}
-                    isDirty={isDirty}
-                    onNext={async () => {
-                      if (isDirty) {
-                        await saveBudget();
-                        return;
-                      }
-                      setStep(1);
-                    }}
+                    onNext={() => setStep(1)}
                   />
                 )}
               </div>
 
               <div className="min-w-full flex items-center justify-center">
+               
                 {isDesktop ? (
                   <StepSavingsDesktop
                     savings={savings}
                     setSavings={setSavings}
                     spendable={spendable}
-                    isDirty={isDirty}
-                    setStep={async () => {
-                      if (isDirty) {
-                        await saveBudget();
-                        return;
-                      }
-                      setStep(2);
-                    }}
+                    setStep={setStep}
                   />
                 ) : (
                   <StepSavingsMobile
                     savings={savings}
                     setSavings={setSavings}
                     spendable={spendable}
-                    isDirty={isDirty}
-                    onNext={async () => {
-                      if (isDirty) {
-                        await saveBudget();
-                        return;
-                      }
-                      setStep(2);
-                    }}
+                    onNext={() => setStep(2)}
                   />
                 )}
               </div>
 
               <div className="min-w-full flex items-center justify-center">
+              
                 {isDesktop ? (
                   <StepBreakdownDesktop
                     spendable={spendable}
@@ -779,3 +755,6 @@ export default function BudgetSetup() {
   );
 }
 
+
+
+ 

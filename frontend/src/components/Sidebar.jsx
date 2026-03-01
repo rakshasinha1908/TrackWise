@@ -19,7 +19,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className="w-[64px] self-stretch bg-[#fbfbfb] border-r border-gray-200 flex flex-col items-center py-6 gap-6 rounded-l-2xl overflow-hidden">
+      className="w-[64px] flex-shrink-0 self-stretch bg-[#fbfbfb] border-r border-gray-200 flex flex-col items-center py-6 gap-6 rounded-l-2xl">
 
       {/* Dashboard */}
       <NavLink

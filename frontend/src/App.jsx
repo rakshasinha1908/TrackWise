@@ -28,6 +28,7 @@ export default function App() {
   }, []);
 
   const handleAdd = (newExpense) => {
+    if (!newExpense) return;
     setExpenses((prev) => [...prev, newExpense]);
   };
 
@@ -38,20 +39,9 @@ export default function App() {
     <BrowserRouter>
       {/* Page background */}
       <div className="bg-gray-100 p-6 min-h-screen">
+       
         {/* Main app container */}
-        
-        {/* <div
-  className="
-    mx-auto
-    max-w-[1400px]
-    bg-white
-    rounded-2xl
-    shadow-sm
-    flex
-    min-h-[calc(100vh-48px)]
-  "
-> */}
-<div
+{/* <div
   className="
     mx-auto
     w-full
@@ -64,13 +54,27 @@ export default function App() {
     lg:h-[calc(100vh-48px)]
     overflow-x-hidden
   "
->
+> */}
 
+<div
+  className="
+    mx-auto
+    w-full
+    max-w-screen-xl
+    bg-white
+    rounded-2xl
+    shadow-sm
+    flex
+    min-h-[calc(100vh-48px)]
+    overflow-x-hidden
+  "
+>
+ 
           {/* Sidebar */}
           <Sidebar />
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <Routes>
               {/* Dashboard */}
               <Route
@@ -112,3 +116,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+
