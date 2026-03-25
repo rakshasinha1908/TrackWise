@@ -6,6 +6,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import AddExpensePage from "./components/AddExpensePage";
 import Sidebar from "./components/Sidebar";
 import BudgetSetup from "./components/BudgetSetup";
+import InsightsPage from "./components/InsightsPage";
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
@@ -41,20 +42,6 @@ export default function App() {
       <div className="bg-gray-100 p-6 min-h-screen">
        
         {/* Main app container */}
-{/* <div
-  className="
-    mx-auto
-    w-full
-    max-w-[1400px]
-    bg-white
-    rounded-2xl
-    shadow-sm
-    flex
-    min-h-[calc(100vh-48px)]
-    lg:h-[calc(100vh-48px)]
-    overflow-x-hidden
-  "
-> */}
 
 <div
   className="
@@ -103,11 +90,7 @@ export default function App() {
               {/* Reports */}
               <Route
                 path="/reports"
-                element={
-                  <div className="p-6 text-gray-600">
-                    Reports page (coming later)
-                  </div>
-                }
+                element={<InsightsPage />}
               />
             </Routes>
           </div>
