@@ -44,30 +44,6 @@ export default function DashboardLayout({ expenses }) {
     savings: 1000, // demo for now
   });
 
-//   useEffect(() => {
-
-//   const loadKPI = async () => {
-
-//     const key =
-//       `${selectedYear}-${String(selectedMonth + 1).padStart(2,"0")}`;
-
-//     const res = await api.get(`/dashboard-kpi/${key}`);
-
-//     setKpi(res.data);
-
-//   };
-
-//   loadKPI();
-
-// }, [selectedYear, selectedMonth]);
-
-// const loadTips = async () => {
-//   const key = `${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
-//   const res = await api.get(`/smart-tips/${key}`);
-//   setTips(res.data);
-// };
-
-// loadTips();
 
 useEffect(()=>{
 

@@ -44,19 +44,26 @@ export default function InsightsHeader({
   onChange={(e) => setSelectedYear(Number(e.target.value))}
   className="bg-transparent outline-none cursor-pointer font-medium"
 >
-  {Array.from(
-    new Set(
-      (expenses || []).map((e) =>
-        new Date(e.date).getFullYear()
+  {(() => {
+    const years = Array.from(
+      new Set(
+        (expenses || []).map((e) =>
+          new Date(e.date).getFullYear()
+        )
       )
-    )
-  )
-    .sort((a, b) => b - a)
-    .map((year) => (
+    );
+
+    const finalYears =
+      years.length > 0
+        ? years.sort((a, b) => b - a)
+        : [new Date().getFullYear()]; // fallback
+
+    return finalYears.map((year) => (
       <option key={year} value={year}>
         {year}
       </option>
-    ))}
+    ));
+  })()}
 </select>
           </div>
         </div>

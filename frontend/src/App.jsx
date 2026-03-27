@@ -90,7 +90,7 @@ export default function App() {
               {/* Reports */}
               <Route
                 path="/reports"
-                element={<InsightsPage />}
+                element={<InsightsPage expenses={expenses} />}
               />
             </Routes>
           </div>
