@@ -262,12 +262,7 @@ def dashboard_kpi(month_key):
     start = datetime(year, month, 1)
     end = datetime(year+1,1,1) if month==12 else datetime(year,month+1,1)
 
-    # -------- CURRENT EXPENSES --------
-    # txns = []
-    # for e in Expense.query.all():
-    #     d = datetime.strptime(e.date,"%Y-%m-%d")
-    #     if start <= d < end:
-    #         txns.append(e)
+
     # -------- CURRENT EXPENSES --------
     txns = Expense.query.filter(
         Expense.date >= start.strftime("%Y-%m-%d"),
@@ -318,11 +313,6 @@ def dashboard_kpi(month_key):
     prev_start=datetime(prev_year,prev_month,1)
     prev_end=datetime(prev_year+1,1,1) if prev_month==12 else datetime(prev_year,prev_month+1,1)
 
-    # prev_txns=[]
-    # for e in Expense.query.all():
-    #     d=datetime.strptime(e.date,"%Y-%m-%d")
-    #     if prev_start<=d<prev_end:
-    #         prev_txns.append(e)
     prev_txns = Expense.query.filter(
         Expense.date >= prev_start.strftime("%Y-%m-%d"),
         Expense.date < prev_end.strftime("%Y-%m-%d")
@@ -406,12 +396,6 @@ def smart_tips(month_key):
     else:
         end=datetime(year,month+1,1)
 
-    # ---------- EXPENSES ----------
-    # txns=[]
-    # for e in Expense.query.all():
-    #     d=datetime.strptime(e.date,"%Y-%m-%d")
-    #     if start<=d<end:
-    #         txns.append(e)
     txns = Expense.query.filter(
         Expense.date >= start.strftime("%Y-%m-%d"),
         Expense.date < end.strftime("%Y-%m-%d")

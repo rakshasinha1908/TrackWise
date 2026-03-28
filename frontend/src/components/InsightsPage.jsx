@@ -54,6 +54,14 @@ export default function InsightsPage({ expenses }) {
   fetchBudget();
 }, [selectedMonth, selectedYear]);
 
+const filteredExpenses = expenses.filter((e) => {
+  const d = new Date(e.date);
+  return (
+    d.getMonth() === selectedMonth &&
+    d.getFullYear() === selectedYear
+  );
+});
+
 
   return (
     <div className="flex bg-gray-50 min-h-screen">
@@ -86,9 +94,14 @@ export default function InsightsPage({ expenses }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <BudgetOverrun 
-            expenses={expenses}
-            budgets={budgets}/>
-            <FinancialHealthScore />
+            expenses={filteredExpenses}
+            budgets={budgets} />
+
+            <FinancialHealthScore 
+             expenses={filteredExpenses}
+             budgets={budgets}
+             selectedMonth={selectedMonth}
+             selectedYear={selectedYear}/>
           </div>
 
           <TrendAcceleration />
