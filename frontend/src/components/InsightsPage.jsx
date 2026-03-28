@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { buildOverrunPredictions } from "../utils/prediction";
-import { faChevronRight, faChevronLeft, } from "@fortawesome/free-solid-svg-icons";
 
 import InsightsHeader from "../components/insights/InsightsHeader";
 import SpendingPersonality from "../components/insights/SpendingPersonality";
@@ -10,13 +8,13 @@ import FinancialHealthScore from "../components/insights/FinancialHealthScore";
 import TrendAcceleration from "../components/insights/TrendAcceleration";
 import SpendingHighlights from "../components/insights/SpendingHighlights";
 import FlaggedExpenses from "../components/insights/FlaggedExpenses";
-import TrendAnomalies from "../components/insights/TrendAnomalies";
 import api from "../api";
 
 export default function InsightsPage({ expenses }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [budgets, setBudgets] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [budgetFull, setBudgetFull] = useState(null);
 
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().getMonth()
@@ -43,6 +41,8 @@ export default function InsightsPage({ expenses }) {
 
     try {
       const res = await api.get(`/budget/${monthKey}`);
+      setBudgets(res.data?.categories || {});
+      setBudgetFull(res.data || null);
       console.log("BUDGET API RESPONSE:", res.data);
       setBudgets(res.data?.categories || {});
     } catch (err) {
@@ -74,6 +74,8 @@ const filteredExpenses = expenses.filter((e) => {
   selectedYear={selectedYear}
   setSelectedYear={setSelectedYear}
   expenses={expenses}
+  budgets={budgets}
+  budgetFull={budgetFull}
 />
 
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-8">
@@ -104,13 +106,24 @@ const filteredExpenses = expenses.filter((e) => {
              selectedYear={selectedYear}/>
           </div>
 
-          <TrendAcceleration />
+          <TrendAcceleration 
+          expenses={expenses}          // all expenses, not filteredExpenses
+  selectedMonth={selectedMonth}
+  selectedYear={selectedYear}/>
+          <div >
+            <SpendingHighlights 
+            expenses={expenses}
+  selectedMonth={selectedMonth}
+  selectedYear={selectedYear}/>
 
-          <SpendingHighlights />
+          
+          </div>
+          <FlaggedExpenses 
+          expenses={expenses}
+  selectedMonth={selectedMonth}
+  selectedYear={selectedYear}
+  budgets={budgets}/>
 
-          <FlaggedExpenses />
-
-          <TrendAnomalies />
 
         </div>
       </div>
