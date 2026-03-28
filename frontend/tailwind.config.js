@@ -2,10 +2,8 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ["Roboto", "system-ui", "sans-serif"],
-      },
+    fontFamily: {
+      sans: ['Nunito', 'sans-serif'],
     },
   },
   plugins: [],

@@ -1,8 +1,8 @@
 @import "tailwindcss";
-body {
-  @apply font-sans;
-}
 
+body {
+  font-family: 'Nunito', sans-serif !important;
+}
 /* ===== Premium Range Slider ===== */
 .styled-range {
   -webkit-appearance: none;

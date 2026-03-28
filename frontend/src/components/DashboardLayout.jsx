@@ -77,7 +77,7 @@ useEffect(()=>{
             <h1 className="text-xl font-semibold text-gray-900">
               Hi Raksha 👋 Here are your spending insights 
             </h1>
-          </div>
+          </div> 
 
           {/* Selector + Toggle */}
           <div className="flex items-center gap-4">

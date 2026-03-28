@@ -7,6 +7,7 @@ import AddExpensePage from "./components/AddExpensePage";
 import Sidebar from "./components/Sidebar";
 import BudgetSetup from "./components/BudgetSetup";
 import InsightsPage from "./components/InsightsPage";
+import './index.css';
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
