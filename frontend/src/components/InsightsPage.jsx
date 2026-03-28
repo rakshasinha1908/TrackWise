@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { buildOverrunPredictions } from "../utils/prediction";
+import { faChevronRight, faChevronLeft, } from "@fortawesome/free-solid-svg-icons";
 
 import InsightsHeader from "../components/insights/InsightsHeader";
 import SpendingPersonality from "../components/insights/SpendingPersonality";
@@ -14,6 +16,7 @@ import api from "../api";
 export default function InsightsPage({ expenses }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [budgets, setBudgets] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().getMonth()
@@ -51,6 +54,7 @@ export default function InsightsPage({ expenses }) {
   fetchBudget();
 }, [selectedMonth, selectedYear]);
 
+
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <div className="flex-1 ">
@@ -81,7 +85,9 @@ export default function InsightsPage({ expenses }) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BudgetOverrun />
+            <BudgetOverrun 
+            expenses={expenses}
+            budgets={budgets}/>
             <FinancialHealthScore />
           </div>
 

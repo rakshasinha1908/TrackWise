@@ -58,7 +58,7 @@ export default function CategoryHeatmap({
   return (
     <Card>
       {/* Header */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-2">
         <h2 className="text-2xl font-semibold">Category Heatmap</h2>
         <span className="text-sm text-gray-500">Budget % Spent</span>
       </div>
@@ -83,7 +83,7 @@ export default function CategoryHeatmap({
             const label = getStatusLabel(percentValue);
 
             return (
-              <div key={cat} className="px-5 py-1.5">
+              <div key={cat} className="px-8 py-1.5">
                 {/* Top Row */}
                 <div className="flex justify-between text-sm">
                   <div className="flex items-center gap-2">
