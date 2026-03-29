@@ -1,6 +1,4 @@
 
----
-
 # 🚀 Trackwise — Smart Expense Analyzer & Tracker
 
 Trackwise is a **modern full-stack expense tracking and financial insights platform** designed to help users **monitor spending, plan budgets, and make smarter financial decisions**.

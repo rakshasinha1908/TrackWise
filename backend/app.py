@@ -18,7 +18,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 SECRET_KEY = os.getenv("SECRET_KEY")
-print("SECRET KEY:", SECRET_KEY)
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
