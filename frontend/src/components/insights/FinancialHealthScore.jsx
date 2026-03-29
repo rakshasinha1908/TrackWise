@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useRef } from "react";
+import { useMemo, useEffect, useState } from "react";
 import api from "../../api";
 import Card from "../ui/Card";
 
@@ -15,9 +15,8 @@ function scoreColor(score) {
   return "#ef4444";
 }
 
-// ─── random message banks ────────────────────────────────────────────────────
+// ─── message banks ───────────────────────────────────────────────────────────
 
-// Overall score messages (5-6 per tier)
 const SCORE_MESSAGES = {
   healthy: [
     "Your finances are in great shape — keep the momentum going and stay consistent.",
@@ -53,58 +52,21 @@ const SCORE_MESSAGES = {
   ],
 };
 
-
 const INDICATOR_MESSAGES = {
   budgetPacing: {
-    well: [
-      "You're spending at a healthy rate.",
-      "Pace looks good — unlikely to exceed budget.",
-      "Daily spend is within range.",
-    ],
-    fair: [
-      "Spending is slightly ahead of schedule.",
-      "Pace is okay but watch daily spend.",
-      "You're a bit ahead of ideal pace.",
-    ],
-    atRisk: [
-      "You've spent far more than expected — slow down.",
-      "At this rate, you'll exceed budget early.",
-      "Spending pace is well ahead of plan.",
-    ],
+    well:   ["You're spending at a healthy rate.", "Pace looks good — unlikely to exceed budget.", "Daily spend is within range."],
+    fair:   ["Spending is slightly ahead of schedule.", "Pace is okay but watch daily spend.", "You're a bit ahead of ideal pace."],
+    atRisk: ["You've spent far more than expected — slow down.", "At this rate, you'll exceed budget early.", "Spending pace is well ahead of plan."],
   },
   categoryBalance: {
-    well: [
-      "Spending is spread across categories.",
-      "Category mix looks balanced — no red flags.",
-      "No over-concentration in one area.",
-    ],
-    fair: [
-      "One category is taking more share.",
-      "Spend distribution is uneven — check balance.",
-      "A dominant category needs watching.",
-    ],
-    atRisk: [
-      "One category is consuming most of budget.",
-      "Too much spend in one area — risky.",
-      "Spending is heavily skewed this month.",
-    ],
+    well:   ["Spending is spread across categories.", "Category mix looks balanced — no red flags.", "No over-concentration in one area."],
+    fair:   ["One category is taking more share.", "Spend distribution is uneven — check balance.", "A dominant category needs watching."],
+    atRisk: ["One category is consuming most of budget.", "Too much spend in one area — risky.", "Spending is heavily skewed this month."],
   },
   savingsDiscipline: {
-    well: [
-      "You're saving a healthy portion — great habit.",
-      "Savings rate is strong — solid buffer.",
-      "Setting aside savings shows discipline.",
-    ],
-    fair: [
-      "Savings rate is okay but could improve.",
-      "You're saving, but a bit more helps long-term.",
-      "Savings are present but not optimal.",
-    ],
-    atRisk: [
-      "Very little saved — concerning.",
-      "Savings rate too low for cushion.",
-      "Spending leaves almost no savings.",
-    ],
+    well:   ["You're saving a healthy portion — great habit.", "Savings rate is strong — solid buffer.", "Setting aside savings shows discipline."],
+    fair:   ["Savings rate is okay but could improve.", "You're saving, but a bit more helps long-term.", "Savings are present but not optimal."],
+    atRisk: ["Very little saved — concerning.", "Savings rate too low for cushion.", "Spending leaves almost no savings."],
   },
 };
 
@@ -122,7 +84,7 @@ function getScoreMessage(score) {
   return pick(SCORE_MESSAGES.atRisk);
 }
 
-// ─── Tailwind classes per tier ───────────────────────────────────────────────
+// ─── tier styling ────────────────────────────────────────────────────────────
 
 function scoreTailwind(score) {
   if (score >= 75) return {
@@ -162,26 +124,19 @@ function scoreSavingsRatio(budget) {
 
 function scoreBudgetAdherence(expenses, budget) {
   if (!budget) return 50;
-  const cats = { Food: budget.food, Shopping: budget.shopping,
-                 Transport: budget.transport, Bills: budget.bills,
-                 Others: budget.others };
+  const cats = { Food: budget.food, Shopping: budget.shopping, Transport: budget.transport, Bills: budget.bills, Others: budget.others };
   const keys = Object.keys(cats).filter(k => cats[k] > 0);
   if (!keys.length) return 50;
   const spend = {};
   expenses.forEach(e => { spend[e.category] = (spend[e.category] || 0) + e.amount; });
   let totalSeverity = 0;
-  keys.forEach(k => {
-    const over = Math.max(0, (spend[k] || 0) - cats[k]);
-    totalSeverity += over / cats[k];
-  });
+  keys.forEach(k => { const over = Math.max(0, (spend[k] || 0) - cats[k]); totalSeverity += over / cats[k]; });
   return clamp(100 - (totalSeverity / keys.length) * 120, 0, 100);
 }
 
 function scoreSpendingPace(expenses, budget, selectedMonth, selectedYear) {
   if (!budget) return 50;
-  const cats = { Food: budget.food, Shopping: budget.shopping,
-                 Transport: budget.transport, Bills: budget.bills,
-                 Others: budget.others };
+  const cats = { Food: budget.food, Shopping: budget.shopping, Transport: budget.transport, Bills: budget.bills, Others: budget.others };
   const totalBudget = Object.values(cats).reduce((a, b) => a + b, 0);
   if (!totalBudget) return 50;
   const totalSpend = expenses.reduce((a, e) => a + e.amount, 0);
@@ -226,9 +181,7 @@ function scoreConsistency(expenses, selectedMonth, selectedYear) {
 
 function scoreOverrunSeverity(expenses, budget) {
   if (!budget) return 50;
-  const cats = { Food: budget.food, Shopping: budget.shopping,
-                 Transport: budget.transport, Bills: budget.bills,
-                 Others: budget.others };
+  const cats = { Food: budget.food, Shopping: budget.shopping, Transport: budget.transport, Bills: budget.bills, Others: budget.others };
   const totalBudget = Object.values(cats).reduce((a, b) => a + b, 0);
   if (!totalBudget) return 50;
   const spend = {};
@@ -242,29 +195,10 @@ function scoreOverrunSeverity(expenses, budget) {
   return clamp(100 - severity * 150, 0, 30);
 }
 
-// ─── Indicator row ───────────────────────────────────────────────────────────
-
-function Indicator({ label, score, message }) {
-  const { dot, tag, label: tagLabel } = scoreTailwind(score);
-  return (
-    <div className="py-2">
-      <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
-        <span className="flex-1 text-xs font-medium text-gray-600">{label}</span>
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${tag}`}>
-          {tagLabel}
-        </span>
-      </div>
-      {message && (
-        <p className="mt-1 text-[11px] text-gray-400 leading-snug pl-4">
-          {message}
-        </p>
-      )}
-    </div>
-  );
-}
-
 // ─── Donut ───────────────────────────────────────────────────────────────────
+// Responsive: renders at two sizes via a CSS custom property.
+// On mobile the SVG is 110×110; on sm+ it's 140×140.
+// We keep a single viewBox="0 0 140 140" and let width/height scale it.
 
 function DonutScore({ score, color }) {
   const [animated, setAnimated] = useState(0);
@@ -289,7 +223,12 @@ function DonutScore({ score, color }) {
   const filled = (animated / 100) * circ;
 
   return (
-    <svg width="140" height="140" viewBox="0 0 140 140" className="flex-shrink-0">
+    // w-[110px] on mobile, w-[140px] on sm+ — height follows automatically
+    <svg
+      width="100%"
+      viewBox="0 0 140 140"
+      className="w-[110px] sm:w-[140px] flex-shrink-0"
+    >
       <circle cx={cx} cy={cy} r={r}
         fill="none" stroke="#e5e7eb" strokeWidth="13"
         transform={`rotate(-90 ${cx} ${cy})`}
@@ -310,6 +249,30 @@ function DonutScore({ score, color }) {
         / 100
       </text>
     </svg>
+  );
+}
+
+// ─── Indicator row ───────────────────────────────────────────────────────────
+
+function Indicator({ label, score, message }) {
+  const { dot, tag, label: tagLabel } = scoreTailwind(score);
+  return (
+    <div className="py-2 sm:py-2.5">
+      <div className="flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+        <span className="flex-1 text-xs sm:text-[13px] font-medium text-gray-600 leading-tight">
+          {label}
+        </span>
+        <span className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${tag}`}>
+          {tagLabel}
+        </span>
+      </div>
+      {message && (
+        <p className="mt-1 text-[11px] text-gray-400 leading-snug pl-4">
+          {message}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -343,17 +306,15 @@ export default function FinancialHealthScore({ expenses, budgets, selectedMonth,
     const s4 = scoreCategoryBalance(expenses);
     const s5 = scoreConsistency(expenses, selectedMonth, selectedYear);
     const s6 = scoreOverrunSeverity(expenses, budgetFlat);
-
     const total = Math.round(s1*0.25 + s2*0.20 + s3*0.20 + s4*0.15 + s5*0.10 + s6*0.10);
     return { s1, s2, s3, s4, s5, s6, total };
   }, [expenses, budgetFull, selectedMonth, selectedYear]);
 
-  // Pick random messages once per score change (stable during re-renders)
   const messages = useMemo(() => ({
-    scoreMsg:    getScoreMessage(scores.total),
-    pacingMsg:   getIndicatorMessage("budgetPacing", scores.s3),
-    balanceMsg:  getIndicatorMessage("categoryBalance", scores.s4),
-    savingsMsg:  getIndicatorMessage("savingsDiscipline", scores.s1),
+    scoreMsg:   getScoreMessage(scores.total),
+    pacingMsg:  getIndicatorMessage("budgetPacing", scores.s3),
+    balanceMsg: getIndicatorMessage("categoryBalance", scores.s4),
+    savingsMsg: getIndicatorMessage("savingsDiscipline", scores.s1),
   }), [scores.total, scores.s3, scores.s4, scores.s1]);
 
   const color = scoreColor(scores.total);
@@ -362,14 +323,44 @@ export default function FinancialHealthScore({ expenses, budgets, selectedMonth,
   return (
     <Card>
       {/* Header */}
-      <div className="mb-5">
-        <h2 className="text-2xl font-semibold tracking-tight">Financial Health Score</h2>
+      <div className="mb-4 sm:mb-5">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
+          Financial Health Score
+        </h2>
       </div>
 
-      {/* Donut left, 3 indicators right */}
-      <div className="flex items-start gap-5">
+      {/*
+        Layout strategy:
+        - Mobile (< sm): donut centred on top, score label below it,
+          then indicators stacked underneath in a full-width block.
+        - sm+ (≥ 640px): donut + label on the left, vertical divider,
+          indicators on the right — the original side-by-side layout.
+      */}
 
-        {/* Donut + label below */}
+      {/* ── Mobile layout: stacked ─────────────────────────────────────── */}
+      <div className="flex flex-col items-center gap-3 sm:hidden">
+
+        {/* Donut + score label */}
+        <div className="flex flex-col items-center gap-1">
+          <DonutScore score={scores.total} color={color} />
+          <span className="text-sm font-bold leading-none mt-1" style={{ color }}>
+            {label}
+          </span>
+          <span className="text-[11px] text-gray-400">{sub}</span>
+        </div>
+
+        {/* Indicators — full width, lightly bordered container */}
+        <div className="w-full rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 px-3">
+          <Indicator label="Budget Pacing"      score={scores.s3} message={messages.pacingMsg}  />
+          <Indicator label="Category Balance"   score={scores.s4} message={messages.balanceMsg} />
+          <Indicator label="Savings Discipline" score={scores.s1} message={messages.savingsMsg} />
+        </div>
+      </div>
+
+      {/* ── sm+ layout: side by side ───────────────────────────────────── */}
+      <div className="hidden sm:flex items-start gap-5">
+
+        {/* Donut + label */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <DonutScore score={scores.total} color={color} />
           <span className="text-sm font-bold leading-none" style={{ color }}>{label}</span>
@@ -379,34 +370,22 @@ export default function FinancialHealthScore({ expenses, budgets, selectedMonth,
         {/* Divider */}
         <div className="w-px self-stretch bg-gray-100" />
 
-        {/* 3 indicators with messages */}
-        <div className="flex-1 flex flex-col divide-y divide-gray-50">
-          <Indicator
-            label="Budget Pacing"
-            score={scores.s3}
-            message={messages.pacingMsg}
-          />
-          <Indicator
-            label="Category Balance"
-            score={scores.s4}
-            message={messages.balanceMsg}
-          />
-          <Indicator
-            label="Savings Discipline"
-            score={scores.s1}
-            message={messages.savingsMsg}
-          />
+        {/* Indicators */}
+        <div className="flex-1 min-w-0 flex flex-col divide-y divide-gray-50">
+          <Indicator label="Budget Pacing"      score={scores.s3} message={messages.pacingMsg}  />
+          <Indicator label="Category Balance"   score={scores.s4} message={messages.balanceMsg} />
+          <Indicator label="Savings Discipline" score={scores.s1} message={messages.savingsMsg} />
         </div>
       </div>
 
-      {/* Overall score message — bottom of card */}
-      <div className="mt-5 pt-4 border-t border-gray-100">
-        <p className="text-sm font-medium text-gray-600 leading-relaxed">
+      {/* Overall score message */}
+      <div className="mt-4 sm:mt-5 pt-4 border-t border-gray-100">
+        <p className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed">
           {messages.scoreMsg}
         </p>
       </div>
 
-      {/* No budget warning */}
+      {/* No-budget warning */}
       {!budgetFull && (
         <p className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           ⚠️ Set a budget for this month to get a full score

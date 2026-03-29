@@ -41,28 +41,25 @@ export default function DashboardLayout({ expenses }) {
   const smartTips = generateSmartTips({
     foodPercent,
     growth,
-    savings: 1000, // demo for now
+    savings: 1000,
   });
 
+  useEffect(()=>{
+    const key=`${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
 
-useEffect(()=>{
+    const loadKPI=async()=>{
+      const res=await api.get(`/dashboard-kpi/${key}`);
+      setKpi(res.data);
+    };
 
-  const key=`${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
+    const loadTips=async()=>{
+      const res=await api.get(`/smart-tips/${key}`);
+      setTips(res.data);
+    };
 
-  const loadKPI=async()=>{
-    const res=await api.get(`/dashboard-kpi/${key}`);
-    setKpi(res.data);
-  };
-
-  const loadTips=async()=>{
-    const res=await api.get(`/smart-tips/${key}`);
-    setTips(res.data);
-  };
-
-  loadKPI();
-  loadTips();
-
-},[selectedYear,selectedMonth]);
+    loadKPI();
+    loadTips();
+  },[selectedYear,selectedMonth]);
 
   console.log("SMART TIPS:", smartTips);
 
@@ -71,17 +68,17 @@ useEffect(()=>{
       {/* ===== MAIN CONTENT ===== */}
       <div className="flex-1 px-6 pb-8 lg:pb-0 pt-4">
         {/* ===== HEADER ROW ===== */}
-        <div className="w-full flex items-center justify-between mb-6">
+        <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
           {/* Greeting */}
           <div className="flex flex-col">
-            <h1 className="text-xl font-semibold text-gray-900">
-              Hi Raksha 👋 Here are your spending insights 
+            <h1 className="text-base sm:text-xl font-semibold text-gray-900 leading-snug">
+              Hi Raksha 👋{" "}
+              <span className="block sm:inline">Here are your spending insights</span>
             </h1>
-          </div> 
+          </div>
 
-          {/* Selector + Toggle */}
-          <div className="flex items-center gap-4">
-            {/* Month / Year Selector */}
+          {/* Selector */}
+          <div className="flex items-center self-start sm:self-auto">
             <div
               className="
                 flex items-center gap-2
@@ -122,11 +119,6 @@ useEffect(()=>{
                     </option>
                   ))}
               </select>
-            </div>
-
-            {/* Toggle (UI only) */}
-            <div className="relative w-11 h-6 bg-gray-200 rounded-full cursor-pointer">
-              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm" />
             </div>
           </div>
         </div>

@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import Card from "../ui/Card";
 
-// ─── constants ───────────────────────────────────────────────────────────────
-
 const CATEGORY_EMOJI = {
   Food: "🍔",
   Shopping: "🛍️",
@@ -10,8 +8,6 @@ const CATEGORY_EMOJI = {
   Bills: "📄",
   Others: "📦",
 };
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function fmt(n) {
   return `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -30,8 +26,6 @@ function toDateOnly(dateStr) {
 function daysBetween(a, b) {
   return Math.round(Math.abs(b - a) / 86400000);
 }
-
-// ─── core analysis ───────────────────────────────────────────────────────────
 
 function buildAnalysis(expenses, selectedMonth, selectedYear) {
   const monthExpenses = expenses.filter((e) => {
@@ -89,7 +83,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
     : accelPct < -10 ? "improved"
     : "stable";
 
-  // category driver
   const catLast7 = {}, catPrev7 = {};
   last7.forEach((e) => { catLast7[e.category] = (catLast7[e.category] || 0) + e.amount; });
   prev7.forEach((e) => { catPrev7[e.category] = (catPrev7[e.category] || 0) + e.amount; });
@@ -99,7 +92,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
     if (delta > topDriverDelta) { topDriverDelta = delta; topDriver = cat; }
   });
 
-  // behavioral insight
   const weekendExp = sorted.filter((e) => { const d = toDateOnly(e.date).getDay(); return d === 0 || d === 6; });
   const weekdayExp = sorted.filter((e) => { const d = toDateOnly(e.date).getDay(); return d > 0 && d < 6; });
   const weekendAvg = weekendExp.reduce((s, e) => s + e.amount, 0) / Math.max(weekendExp.length, 1);
@@ -121,7 +113,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
   }
   if (!behaviorInsight) behaviorInsight = "No strong behavioural pattern detected yet.";
 
-  // action + daysLeft
   const daysLeft = isCurrentMonth
     ? new Date(selectedYear, selectedMonth + 1, 0).getDate() - today.getDate()
     : 0;
@@ -137,7 +128,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
   else
     action = { text: "Add more expenses to unlock trend detection.", cta: null };
 
-  // sparkline — last 7 days
   const sparkDays = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(refDate);
@@ -149,7 +139,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
     });
   }
 
-  // top spend days for the right panel (sorted by value desc, non-zero only)
   const topDays = [...sparkDays]
     .filter((d) => d.value > 0)
     .sort((a, b) => b.value - a.value)
@@ -173,8 +162,6 @@ function buildAnalysis(expenses, selectedMonth, selectedYear) {
   };
 }
 
-// ─── status config ────────────────────────────────────────────────────────────
-
 const STATUS_CONFIG = {
   spike: {
     icon: "🚨",
@@ -187,7 +174,6 @@ const STATUS_CONFIG = {
     accentBorder: "rgba(244,63,94,0.13)",
     accentDivider: "rgba(244,63,94,0.15)",
     arrowSymbol: "↗",
-    changePrefix: "+",
     barGradient: ["#ffb3b3", "#ff6b8a", "#f43f5e"],
   },
   stable: {
@@ -201,7 +187,6 @@ const STATUS_CONFIG = {
     accentBorder: "rgba(245,158,11,0.13)",
     accentDivider: "rgba(245,158,11,0.15)",
     arrowSymbol: "→",
-    changePrefix: "",
     barGradient: ["#fde68a", "#fbbf24", "#f59e0b"],
   },
   improved: {
@@ -215,7 +200,6 @@ const STATUS_CONFIG = {
     accentBorder: "rgba(16,185,129,0.13)",
     accentDivider: "rgba(16,185,129,0.15)",
     arrowSymbol: "↘",
-    changePrefix: "",
     barGradient: ["#a7f3d0", "#34d399", "#10b981"],
   },
   nodata: {
@@ -229,31 +213,28 @@ const STATUS_CONFIG = {
     accentBorder: "rgba(156,163,175,0.13)",
     accentDivider: "rgba(156,163,175,0.15)",
     arrowSymbol: "–",
-    changePrefix: "",
     barGradient: ["#e5e7eb", "#d1d5db", "#9ca3af"],
   },
 };
 
-// ─── GradientSparkline (horizontal, fills available space) ───────────────────
+// ─── Sparkline — hidden on mobile via parent, shown sm+ ──────────────────────
 
 function GradientSparkline({ days, gradientColors }) {
   const max = Math.max(...days.map((d) => d.value), 1);
   const [c1, c2, c3] = gradientColors;
-  const weekTotal = days.reduce((s, d) => s + d.value, 0);
 
   return (
     <div className="flex-1 min-w-0">
       <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1.5">
         Daily spend — last 7 days
       </p>
-      <div className="flex items-end gap-[3px]" style={{ height: "60px" }}>
+      <div className="flex items-end gap-[3px] h-[60px]">
         {days.map((d, i) => {
           const heightPct = d.value > 0 ? Math.max((d.value / max) * 100, 10) : 3;
           const intensity = i / (days.length - 1);
           const barColor = d.value > 0
             ? intensity < 0.33 ? c1 : intensity < 0.66 ? c2 : c3
             : "#f3f4f6";
-          const amtLabel = d.value > 0 ? fmtCompact(d.value) : null;
 
           return (
             <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0 h-full justify-end">
@@ -266,8 +247,8 @@ function GradientSparkline({ days, gradientColors }) {
                 }}
               />
               <span className="text-[9px] text-gray-400 leading-none font-medium">{d.label}</span>
-              {amtLabel ? (
-                <span className="text-[8px] text-gray-600 leading-none">{amtLabel}</span>
+              {d.value > 0 ? (
+                <span className="text-[8px] text-gray-600 leading-none">{fmtCompact(d.value)}</span>
               ) : (
                 <span className="text-[8px] leading-none opacity-0">–</span>
               )}
@@ -282,45 +263,40 @@ function GradientSparkline({ days, gradientColors }) {
 // ─── RightPanel ───────────────────────────────────────────────────────────────
 
 function RightPanel({ analysis, cfg }) {
-  const weekTotal = analysis.last7Total;
-
   return (
-    <div className="lg:w-48 flex-shrink-0 rounded-2xl p-4 flex flex-col gap-3 bg-gray-50 border border-gray-100">
+    <div className="w-full lg:w-48 flex-shrink-0 rounded-2xl p-3 sm:p-4 flex flex-col gap-3 bg-gray-50 border border-gray-100">
       <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
         Last 7 Days
       </p>
 
-      {/* Week totals */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-baseline">
-          <span className="text-sm text-gray-500">This week</span>
-          <span className="text-base font-bold text-gray-800">{fmt(analysis.last7Total)}</span>
+      <div className="flex sm:flex-col gap-3 sm:gap-2">
+        <div className="flex-1 flex justify-between items-baseline">
+          <span className="text-xs sm:text-sm text-gray-500">This week</span>
+          <span className="text-sm sm:text-base font-bold text-gray-800">{fmt(analysis.last7Total)}</span>
         </div>
-        <div className="flex justify-between items-baseline">
-          <span className="text-sm text-gray-500">Last week</span>
-          <span className="text-base font-bold text-gray-800">{fmt(analysis.prev7Total)}</span>
+        <div className="flex-1 flex justify-between items-baseline">
+          <span className="text-xs sm:text-sm text-gray-500">Last week</span>
+          <span className="text-sm sm:text-base font-bold text-gray-800">{fmt(analysis.prev7Total)}</span>
         </div>
       </div>
 
       <div className="border-t border-gray-100" />
 
-      {/* Top spend days with mini progress bars */}
       {analysis.topDays.length > 0 && (
         <>
           <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
             Top spend days
           </p>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-3">
             {analysis.topDays.map((d, i) => {
               const barPct = Math.round((d.value / analysis.topDays[0].value) * 100);
-              const sharePct = Math.round((d.value / Math.max(weekTotal, 1)) * 100);
+              const sharePct = Math.round((d.value / Math.max(analysis.last7Total, 1)) * 100);
               return (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between items-baseline">
                     <span className="text-xs text-gray-500">{d.label}</span>
                     <span className="text-xs font-semibold text-gray-700">{fmt(d.value)}</span>
                   </div>
-                  {/* Mini progress bar */}
                   <div className="h-[3px] w-full rounded-full bg-gray-200 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
@@ -341,7 +317,7 @@ function RightPanel({ analysis, cfg }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function TrendAcceleration({ expenses = [], selectedMonth, selectedYear }) {
   const analysis = useMemo(
@@ -353,7 +329,7 @@ export default function TrendAcceleration({ expenses = [], selectedMonth, select
     return (
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold tracking-tight">Trend Acceleration</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Trend Acceleration</h2>
         </div>
         <p className="text-sm text-gray-400">No expenses found for this month.</p>
       </Card>
@@ -364,85 +340,83 @@ export default function TrendAcceleration({ expenses = [], selectedMonth, select
 
   return (
     <Card>
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-900">
           Trend Acceleration
         </h2>
         <span
-          className="text-xs font-bold px-4 py-1.5 rounded-full"
+          className="text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full flex-shrink-0"
           style={cfg.badgeStyle}
         >
           {cfg.badge}
         </span>
       </div>
 
-      {/* ── Body ── */}
+      {/* Body */}
       <div className="flex flex-col lg:flex-row gap-4">
 
-        {/* ════ LEFT column ════ */}
-        <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* Left column */}
+        <div className="flex-1 min-w-0 flex flex-col gap-3 sm:gap-4">
 
           {/* 1. Status headline */}
-          <div className="flex items-center gap-3">
-            <span className="text-xl leading-none">{cfg.icon}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-lg sm:text-xl leading-none">{cfg.icon}</span>
             <div>
-              <p className="text-lg font-semibold text-gray-800 leading-tight">
+              <p className="text-base sm:text-lg font-semibold text-gray-800 leading-tight">
                 {cfg.headline}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">{cfg.sub}</p>
             </div>
           </div>
 
-          {/* 2. Proof box — week stats + full-width sparkline side by side */}
+          {/* 2. Proof box */}
           {analysis.status !== "nodata" && (
             <div
-              className="rounded-2xl p-4"
+              className="rounded-2xl p-3 sm:p-4"
               style={{
                 background: cfg.accentLight,
                 border: `1px solid ${cfg.accentBorder}`,
               }}
             >
-              {/* Top row: stats left, sparkline right */}
-              <div className="flex items-stretch gap-4 mb-0">
+              {/* On mobile: stacked stats only. On sm+: stats + sparkline side by side */}
+              <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
+
                 {/* Week stats */}
-                <div className="flex items-center gap-4 flex-shrink-0">
+                <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
                   <div>
                     <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1">
                       This week
                     </p>
-                    <p className="text-xl font-bold text-gray-800 leading-none">
+                    <p className="text-base sm:text-xl font-bold text-gray-800 leading-none">
                       {fmt(analysis.currentAvg)}
-                      <span className="text-xs font-normal text-gray-400 ml-0.5">/day</span>
+                      <span className="text-[10px] sm:text-xs font-normal text-gray-400 ml-0.5">/day</span>
                     </p>
-                    <p
-                      className="text-sm font-bold mt-1"
-                      style={{ color: cfg.accentColor }}
-                    >
+                    <p className="text-xs sm:text-sm font-bold mt-1" style={{ color: cfg.accentColor }}>
                       {cfg.arrowSymbol} {analysis.accelPct > 0 ? "+" : ""}{analysis.accelPct}%
                     </p>
                   </div>
 
-                  <span className="text-base font-bold" style={{ color: cfg.accentColor }}>
-                    →
-                  </span>
+                  <span className="text-sm sm:text-base font-bold" style={{ color: cfg.accentColor }}>→</span>
 
                   <div>
                     <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1">
                       Last week
                     </p>
-                    <p className="text-xl font-bold text-gray-800 leading-none">
+                    <p className="text-base sm:text-xl font-bold text-gray-800 leading-none">
                       {fmt(analysis.previousAvg)}
-                      <span className="text-xs font-normal text-gray-400 ml-0.5">/day</span>
+                      <span className="text-[10px] sm:text-xs font-normal text-gray-400 ml-0.5">/day</span>
                     </p>
                   </div>
                 </div>
 
-                {/* Sparkline fills remaining width */}
-                <GradientSparkline
-                  days={analysis.sparkDays}
-                  gradientColors={cfg.barGradient}
-                />
+                {/* Sparkline — hidden on mobile, visible sm+ */}
+                <div className="hidden sm:flex flex-1 min-w-0">
+                  <GradientSparkline
+                    days={analysis.sparkDays}
+                    gradientColors={cfg.barGradient}
+                  />
+                </div>
               </div>
 
               {/* Delta line */}
@@ -463,8 +437,8 @@ export default function TrendAcceleration({ expenses = [], selectedMonth, select
 
           {/* 3. Category driver */}
           {analysis.topDriver && analysis.topDriverDelta > 0 && (
-            <div className="flex items-start gap-2.5">
-              <span className="text-base leading-none mt-0.5">
+            <div className="flex items-start gap-2 sm:gap-2.5">
+              <span className="text-sm sm:text-base leading-none mt-0.5">
                 {CATEGORY_EMOJI[analysis.topDriver] || "📦"}
               </span>
               <p className="text-xs text-gray-600">
@@ -479,18 +453,19 @@ export default function TrendAcceleration({ expenses = [], selectedMonth, select
           )}
 
           {/* 4. Behavioral insight */}
-          <div className="flex items-start gap-2.5">
-            <span className="text-base leading-none mt-0.5">💬</span>
+          <div className="flex items-start gap-2 sm:gap-2.5">
+            <span className="text-sm sm:text-base leading-none mt-0.5">💬</span>
             <p className="text-xs text-gray-500 italic leading-relaxed">
               {analysis.behaviorInsight}
             </p>
           </div>
 
-          {/* 5. Action suggestion — pushed to bottom */}
+          {/* 5. Action suggestion */}
           {analysis.action && (
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3 mt-auto">
-              <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                <span className="text-base leading-none mt-0.5 flex-shrink-0">🎯</span>
+            <div className="rounded-2xl bg-gray-50 border border-gray-100 px-3 sm:px-4 py-2.5 sm:py-3 mt-auto">
+
+              <div className="flex items-start gap-2 sm:gap-2.5">
+                <span className="text-sm sm:text-base leading-none mt-0.5 flex-shrink-0">🎯</span>
                 <p className="text-xs text-gray-700 leading-relaxed">
                   {analysis.action.text.split(/(₹[\d,]+)/).map((part, i) =>
                     part.startsWith("₹") ? (
@@ -501,22 +476,40 @@ export default function TrendAcceleration({ expenses = [], selectedMonth, select
                   )}
                 </p>
               </div>
+
+              {/* CTA: below text on mobile, inline on sm+ */}
               {analysis.action.cta && (
-                <button
-                  className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl text-white whitespace-nowrap"
-                  style={{
-                    background: `linear-gradient(135deg, ${cfg.barGradient[1]}, ${cfg.barGradient[2]})`,
-                    boxShadow: `0 4px 12px ${cfg.accentColor}44`,
-                  }}
-                >
-                  {analysis.action.cta}
-                </button>
+                <>
+                  {/* Mobile: full-width button below text */}
+                  <button
+                    className="mt-2.5 w-full sm:hidden text-xs font-bold px-4 py-2 rounded-xl text-white"
+                    style={{
+                      background: `linear-gradient(135deg, ${cfg.barGradient[1]}, ${cfg.barGradient[2]})`,
+                      boxShadow: `0 4px 12px ${cfg.accentColor}44`,
+                    }}
+                  >
+                    {analysis.action.cta}
+                  </button>
+
+                  {/* sm+: sits on same row as text via a wrapping flex */}
+                  <div className="hidden sm:flex justify-end mt-2">
+                    <button
+                      className="text-xs font-bold px-4 py-2 rounded-xl text-white whitespace-nowrap"
+                      style={{
+                        background: `linear-gradient(135deg, ${cfg.barGradient[1]}, ${cfg.barGradient[2]})`,
+                        boxShadow: `0 4px 12px ${cfg.accentColor}44`,
+                      }}
+                    >
+                      {analysis.action.cta}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}
         </div>
 
-        {/* ════ RIGHT column ════ */}
+        {/* Right panel */}
         <RightPanel analysis={analysis} cfg={cfg} />
       </div>
     </Card>
