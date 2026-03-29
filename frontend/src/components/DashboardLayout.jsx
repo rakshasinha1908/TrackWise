@@ -20,8 +20,8 @@ export default function DashboardLayout({ expenses }) {
 
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-  const [kpi,setKpi]=useState(null);
-  const [tips,setTips]=useState([]);
+  const [kpi, setKpi] = useState(null);
+  const [tips, setTips] = useState([]);
 
   const { currentTotal, previousTotal } =
     getMonthlyTotals(expenses, selectedYear, selectedMonth);
@@ -44,24 +44,30 @@ export default function DashboardLayout({ expenses }) {
     savings: 1000,
   });
 
-  useEffect(()=>{
-    const key=`${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}`;
+  useEffect(() => {
+    const key = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
 
-    const loadKPI=async()=>{
-      const res=await api.get(`/dashboard-kpi/${key}`);
+    const loadKPI = async () => {
+      const res = await api.get(`/dashboard-kpi/${key}`);
       setKpi(res.data);
     };
 
-    const loadTips=async()=>{
-      const res=await api.get(`/smart-tips/${key}`);
+    const loadTips = async () => {
+      const res = await api.get(`/smart-tips/${key}`);
       setTips(res.data);
+      console.log("SMART TIPS API:", res.data);
     };
 
     loadKPI();
     loadTips();
-  },[selectedYear,selectedMonth]);
+  }, [selectedYear, selectedMonth]);
 
   console.log("SMART TIPS:", smartTips);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
   return (
     <>
@@ -73,12 +79,15 @@ export default function DashboardLayout({ expenses }) {
           <div className="flex flex-col">
             <h1 className="text-base sm:text-xl font-semibold text-gray-900 leading-snug">
               Hi Raksha 👋{" "}
-              <span className="block sm:inline">Here are your spending insights</span>
+              <span className="block sm:inline">
+                Here are your spending insights
+              </span>
             </h1>
           </div>
 
-          {/* Selector */}
-          <div className="flex items-center self-start sm:self-auto">
+          {/* Selector + Logout */}
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {/* Selector */}
             <div
               className="
                 flex items-center gap-2
@@ -89,6 +98,7 @@ export default function DashboardLayout({ expenses }) {
                 text-gray-700
               "
             >
+              {/* Month */}
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -104,6 +114,7 @@ export default function DashboardLayout({ expenses }) {
                 ))}
               </select>
 
+              {/* Year */}
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -120,6 +131,23 @@ export default function DashboardLayout({ expenses }) {
                   ))}
               </select>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="
+                px-4 py-1.5
+                text-sm font-medium
+                text-red-600
+                bg-red-50
+                border border-red-200
+                rounded-full
+                hover:bg-red-100
+                transition
+              "
+            >
+              Logout
+            </button>
           </div>
         </div>
 
@@ -157,16 +185,36 @@ export default function DashboardLayout({ expenses }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Total Spend" value={`₹${kpi?.total_spend ?? 0}`}  change={`${Math.abs(kpi?.change_pct ?? 0)}%`} rawChange={kpi?.change_pct} />
+                  <KPICard
+                    label="Total Spend"
+                    value={`₹${kpi?.total_spend ?? 0}`}
+                    change={`${Math.abs(kpi?.change_pct ?? 0)}%`}
+                    rawChange={kpi?.change_pct}
+                  />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Avg / Day" value={`₹${kpi?.avg_day ?? 0}`} change={`${kpi?.avg_change_pct ?? 0}%`} rawChange={kpi?.avg_change_pct} />
+                  <KPICard
+                    label="Avg / Day"
+                    value={`₹${kpi?.avg_day ?? 0}`}
+                    change={`${kpi?.avg_change_pct ?? 0}%`}
+                    rawChange={kpi?.avg_change_pct}
+                  />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Vs Budget" value={`${kpi?.budget_used ?? 0}%`} change={`${kpi?.budget_change_pct ?? 0}%`} rawChange={kpi?.budget_change_pct} />
+                  <KPICard
+                    label="Vs Budget"
+                    value={`${kpi?.budget_used ?? 0}%`}
+                    change={`${kpi?.budget_change_pct ?? 0}%`}
+                    rawChange={kpi?.budget_change_pct}
+                  />
                 </div>
                 <div className="h-[105px] w-full lg:max-w-[110px]">
-                  <KPICard label="Txns" value={kpi?.txn_count ?? 0} change={`${kpi?.txn_change_pct ?? 0}%`} rawChange={kpi?.txn_change_pct} />
+                  <KPICard
+                    label="Txns"
+                    value={kpi?.txn_count ?? 0}
+                    change={`${kpi?.txn_change_pct ?? 0}%`}
+                    rawChange={kpi?.txn_change_pct}
+                  />
                 </div>
               </div>
             </div>
@@ -192,3 +240,5 @@ export default function DashboardLayout({ expenses }) {
     </>
   );
 }
+
+ 

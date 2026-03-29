@@ -1,7 +1,14 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
+from flask_bcrypt import Bcrypt
+import jwt
+from functools import wraps
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -9,14 +16,17 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+SECRET_KEY = os.getenv("SECRET_KEY")
+print("SECRET KEY:", SECRET_KEY)
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(80), nullable=False)
     note = db.Column(db.String(200))
-    # date = db.Column(db.String(10), nullable=False)
     date = db.Column(db.String(10), nullable=False, index=True)
+    user_id = db.Column(db.Integer, nullable=False)
 
     def to_dict(self):
         return {
@@ -27,18 +37,77 @@ class Expense(db.Model):
             "date": self.date
         }
 
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get("Authorization")
+
+        if not token:
+            return jsonify({"error": "Token missing"}), 401
+
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            request.user_id = data["user_id"]
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token expired"}), 401
+
+        except:
+            return jsonify({"error": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Trackwise API is running 🚀"})
 
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+
+    hashed_pw = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+
+    user = User(email=data["email"], password=hashed_pw)
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({"message": "User created"})
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+
+    user = User.query.filter_by(email=data["email"]).first()
+
+    if not user or not bcrypt.check_password_hash(user.password, data["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token = jwt.encode(
+    {
+        "user_id": user.id,
+        "exp": datetime.utcnow() + timedelta(days=1)
+    },
+    SECRET_KEY,
+    algorithm="HS256"
+)
+
+    return jsonify({"token": token})
+
 # ✅ Get all expenses
+# @app.route("/expenses", methods=["GET"])
 @app.route("/expenses", methods=["GET"])
+@require_auth
 def get_expenses():
-    expenses = Expense.query.all()
+    # expenses = Expense.query.all()
+    # expenses = Expense.query.filter_by(user_id=1).all()
+    expenses = Expense.query.filter_by(user_id=request.user_id).all()
     return jsonify([e.to_dict() for e in expenses])
 
 # ✅ Add new expense
+# @app.route("/expenses", methods=["POST"])
 @app.route("/expenses", methods=["POST"])
+@require_auth
 def add_expense():
     data = request.json
     if not data or not data.get("amount") or not data.get("category"):
@@ -48,7 +117,9 @@ def add_expense():
         amount=data.get("amount"),
         category=data.get("category"),
         note=data.get("note", ""),
-        date=data.get("date", datetime.now().strftime("%Y-%m-%d"))
+        date=data.get("date", datetime.now().strftime("%Y-%m-%d")),
+        # user_id=1
+        user_id=request.user_id
     )
     db.session.add(new_expense)
     db.session.commit()
@@ -83,7 +154,7 @@ def delete_expense(id):
 class Budget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.String(50), nullable=False)  # future-ready
+    user_id = db.Column(db.Integer, nullable=False)  # future-ready
     # month_key = db.Column(db.String(7), nullable=False)  # YYYY-MM
     month_key = db.Column(db.String(7), nullable=False, index=True)
 
@@ -112,9 +183,10 @@ class Budget(db.Model):
 
 
 @app.route("/budget/<month_key>", methods=["GET"])
+@require_auth
 def get_budget(month_key):
 
-    user_id = "demo"
+    user_id = request.user_id
 
     budget = Budget.query.filter_by(
         user_id=user_id,
@@ -204,9 +276,10 @@ def get_budget(month_key):
     return jsonify(None)
     
 @app.route("/budget/<month_key>", methods=["POST"])
+@require_auth
 def save_budget(month_key):
 
-    user_id = "demo"   # temp single user
+    user_id = request.user_id
 
     data = request.json
     if not data or "income" not in data or "categories" not in data:
@@ -248,13 +321,16 @@ def save_budget(month_key):
 
     return jsonify({"success": True})
 
+# @app.route("/dashboard-kpi/<month_key>")
+# def dashboard_kpi(month_key):
 @app.route("/dashboard-kpi/<month_key>")
+@require_auth
 def dashboard_kpi(month_key):
 
     from datetime import datetime
     import calendar
 
-    user_id = "demo"
+    user_id = request.user_id
 
     # -------- PARSE MONTH --------
     year, month = map(int, month_key.split("-"))
@@ -265,6 +341,7 @@ def dashboard_kpi(month_key):
 
     # -------- CURRENT EXPENSES --------
     txns = Expense.query.filter(
+        Expense.user_id == request.user_id,
         Expense.date >= start.strftime("%Y-%m-%d"),
         Expense.date < end.strftime("%Y-%m-%d")
     ).all()
@@ -314,6 +391,7 @@ def dashboard_kpi(month_key):
     prev_end=datetime(prev_year+1,1,1) if prev_month==12 else datetime(prev_year,prev_month+1,1)
 
     prev_txns = Expense.query.filter(
+        Expense.user_id == request.user_id,
         Expense.date >= prev_start.strftime("%Y-%m-%d"),
         Expense.date < prev_end.strftime("%Y-%m-%d")
     ).all()
@@ -380,13 +458,16 @@ def dashboard_kpi(month_key):
     
 
 
+# @app.route("/smart-tips/<month_key>")
+# def smart_tips(month_key):
 @app.route("/smart-tips/<month_key>")
+@require_auth
 def smart_tips(month_key):
 
     from datetime import datetime
     import calendar
 
-    user_id="demo"
+    user_id= request.user_id
 
     year,month=map(int,month_key.split("-"))
     start=datetime(year,month,1)
@@ -397,6 +478,7 @@ def smart_tips(month_key):
         end=datetime(year,month+1,1)
 
     txns = Expense.query.filter(
+        Expense.user_id == request.user_id,
         Expense.date >= start.strftime("%Y-%m-%d"),
         Expense.date < end.strftime("%Y-%m-%d")
     ).all()
@@ -516,9 +598,16 @@ def smart_tips(month_key):
                 })
 
     # ---------- ALWAYS HAVE SOMETHING ----------
-    if not tips:
+    if not budget:
         tips.append({
-            "title":"Good start",
+            "title":"No Budget set",
+            "msg":"Add budget to unlock better insights.",
+            "score":10,
+            "type":"info"
+        })
+    elif not tips:
+        tips.append({
+            "title":"Good Start",
             "msg":"Add expenses to unlock smart insights.",
             "score":10,
             "type":"info"
@@ -528,6 +617,11 @@ def smart_tips(month_key):
     tips.sort(key=lambda x:x["score"],reverse=True)
 
     return jsonify(tips[:12])
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
 
 if __name__ == "__main__":

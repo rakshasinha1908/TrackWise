@@ -8,26 +8,40 @@ import Sidebar from "./components/Sidebar";
 import BudgetSetup from "./components/BudgetSetup";
 import InsightsPage from "./components/InsightsPage";
 import './index.css';
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
 export default function App() {
+
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await api.get("/expenses");
-        setExpenses(res.data);
-      } catch (err) {
-        console.error(err);
-        setError(err?.message || "Failed to reach backend");
-      } finally {
-        setLoading(false);
-      }
+  async function init() {
+    let token = localStorage.getItem("token");
+
+    // 🔥 agar token nahi hai → login karo
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    load();
-  }, []);
+
+    // 🔥 phir expenses fetch karo
+    try {
+      const res = await api.get("/expenses");
+      setExpenses(res.data);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Failed to reach backend");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  init();
+}, []);
 
   const handleAdd = (newExpense) => {
     if (!newExpense) return;
@@ -38,39 +52,39 @@ export default function App() {
   if (error) return <p className="text-red-600 p-6">API error: {error}</p>;
 
   return (
-    <BrowserRouter>
-      {/* Page background */}
+  <BrowserRouter>
+    {!token ? (
+      <Routes>
+        <Route path="*" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="*" element={<LoginPage />} />
+      </Routes>
+    ) : (
       <div className="bg-gray-100 p-6 min-h-screen">
-       
-        {/* Main app container */}
-
-<div
-  className="
-    mx-auto
-    w-full
-    max-w-screen-xl
-    bg-white
-    rounded-2xl
-    shadow-sm
-    flex
-    min-h-[calc(100vh-48px)]
-    overflow-x-hidden
-  "
->
- 
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-screen-xl
+            bg-white
+            rounded-2xl
+            shadow-sm
+            flex
+            min-h-[calc(100vh-48px)]
+            overflow-x-hidden
+          "
+        >
           {/* Sidebar */}
           <Sidebar />
 
           {/* Main Content */}
           <div className="flex-1 min-w-0 overflow-hidden">
             <Routes>
-              {/* Dashboard */}
               <Route
                 path="/"
                 element={<DashboardLayout expenses={expenses} />}
               />
 
-              {/* Add Expense */}
               <Route
                 path="/add"
                 element={
@@ -81,14 +95,8 @@ export default function App() {
                 }
               />
 
-              {/* Budget Setup */}
-              <Route
-                path="/setup"
-                element={<BudgetSetup />}
-              />
+              <Route path="/setup" element={<BudgetSetup />} />
 
-
-              {/* Reports */}
               <Route
                 path="/reports"
                 element={<InsightsPage expenses={expenses} />}
@@ -97,8 +105,9 @@ export default function App() {
           </div>
         </div>
       </div>
-    </BrowserRouter>
-  );
+    )}
+  </BrowserRouter>
+);
 }
 
-
+ 
