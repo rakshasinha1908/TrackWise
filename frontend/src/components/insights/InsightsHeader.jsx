@@ -44,8 +44,8 @@ export default function InsightsHeader({
             }`}
           >
             {/* Short version on very small screens */}
-            <span className="sm:hidden">Hi Raksha 👋</span>
-            <span className="hidden sm:inline">Hi Raksha 👋 Insights Overview</span>
+            <span className="sm:hidden">Insights Overview</span>
+            <span className="hidden sm:inline">Insights Overview</span>
           </h1>
 
           {/* Controls */}

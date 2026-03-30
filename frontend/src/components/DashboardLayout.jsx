@@ -78,7 +78,7 @@ export default function DashboardLayout({ expenses }) {
           {/* Greeting */}
           <div className="flex flex-col">
             <h1 className="text-base sm:text-xl font-semibold text-gray-900 leading-snug">
-              Hi Raksha 👋{" "}
+              Hi👋{" "}
               <span className="block sm:inline">
                 Here are your spending insights
               </span>
