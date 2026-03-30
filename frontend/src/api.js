@@ -1,12 +1,9 @@
 // src/api.js
 import axios from "axios";
 
-// const api = axios.create({
-//   baseURL: "http://127.0.0.1:5000", // Flask backend ka URL
-// });
-
 const api = axios.create({
-  baseURL: "http://127.0.0.1:5000",
+  // baseURL: "http://127.0.0.1:5000",
+  baseURL: "https://trackwise-backend-jfad.onrender.com",
 });
 
 // 🔥 ADD THIS BELOW
