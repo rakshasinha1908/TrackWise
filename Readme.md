@@ -117,6 +117,7 @@ Users can download a **complete PDF report** including:
 ### Database
 
 * SQLite (development)
+* PostgreSQL (deployment)
 
 ---
 
